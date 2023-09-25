@@ -1,0 +1,443 @@
+{% extends "HealthCentre/layout.html" %}
+{% load static %}
+{% block title %}
+NDC-Prescription
+{% endblock%}
+
+{% block script %}
+
+    <script src="{% static 'HealthCentre/javascript/checkboxConfirm.js' %}"></script>
+{% endblock %}
+
+{% block bodytag %}
+
+    {% load static %}
+    <body background="{% static 'HealthCentre/images/plain.jpg' %}" style="background-size: auto auto;">
+
+{% endblock %}
+
+
+{% block body %}
+
+    <br>
+
+    <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
+
+    
+
+    {% if successPrescriptionMessage %}
+        <br>
+            <div style="text-align:center;margin:0 auto;"class="alert alert-warning" role="alert">
+                {{ successPrescriptionMessage }}
+            </div>
+    {% endif %}
+    <style>
+      .a-right {
+        position: fixed;
+        right: 50px;
+        margin-right: 5;
+      }
+      .a-left {
+        position: fixed;
+        left: 50px;
+      }
+      @media print {
+         .hide {
+          visibility: hidden;
+         } 
+      }  
+      .invisible{
+        display : none;
+      }
+      button.first{
+        position: absolute;
+      }
+    </style>
+    {% if request.session.isLoggedIn  %}
+      {% if request.session.isDoctor %}
+      <!-- <form align="left" action="{% url 'doctorprofile' %}" method="post" style="margin-right:5%"> -->
+        {% csrf_token %}
+        <div class ="hide">
+       <li class = "button">
+        <a class="button" align = "right" type ="submit" style="color:rgb(30,126,216); margin-left: 3%;" href="{% url 'doctorprofile' %}">Write new prescription</a>
+        <!-- <li class = "button"> --> <br>
+          <a class="button"  align = "right" type ="submit" style="color:rgb(30, 126, 216); margin-left: 3%;" href="{% url 'register' %}">Add new patient</a>
+        <!-- </li> -->
+        <button class="button" id="generatePdfFile" align = "right" type ="submit" style="color:rgb(30, 126, 216); margin-left: 3%;" >Print/Save pdf</button>
+    </li> 
+    <!-- href="{% url 'generatePDF' %}" -->
+  </div>
+        <!-- <button type="submit" name="writeNewPrescription" class="btn btn-warning btn-lg" action="{% url 'doctorprofile' %}">Write new prescription</button> -->
+      <br>
+      <li class="dropdown-divider" style="margin-left:25%;margin-right:25%;border-color:black"></li>
+      <br>
+      <!-- </form> -->
+    
+      <style>
+        .prescription-table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+      
+        .prescription-table th,
+        .prescription-table td {
+          padding: 10px;
+          text-align: left;
+          border-bottom: 1px solid #ddd;
+        }
+      
+        .prescription-table th {
+          background-color: #f2f2f2;
+        }
+      
+        .prescription-table tr:hover {
+          background-color: #f5f5f5;
+        }
+
+        .prescription-details {
+          display: none;
+          background-color: #f5f5f5;
+          padding: 10px;
+        }
+    </style>
+    <!-- style="margin-right: 90%;" -->
+    
+        <form onsubmit="return checkConfirm()" action="{% url 'doctorprofile' %}" method="post" id="prescriptionForm">
+          {% csrf_token %}
+          <div class="container center_div"style = "background:rgba(255,255,255);padding-top:2%;padding-bottom:2%" width="300px">  
+          <img src="{% static 'HealthCentre/images/NandaLogo.jpg' %}" style="width:100%;height:100%;"></img>
+          <li class="dropdown-divider" style="margin-left:25%;margin-right:25%;border-color:black"></li>
+          <div class="form-inline" >
+              <label for = "selectedPatient" style="color:rgb(0, 0, 0);"><strong>Patient Name: </strong></label>
+                <select name="selectedPatient" id = "selectedPatient" class="form-inline" placeholder="Select Patient">
+                  <option value = "">select patient</option>
+                    {% for patient in patients %}
+                        <option value="{{ patient.name }}">{{ patient.name }}</option>
+                    {% endfor %}
+                    {% for prescription in prescPatients %}
+                    <option value="{{ prescription.prescribingPatient }}">{{ prescription.prescribingPatient }}</option>
+                    {% endfor %}
+                </select>
+                <!-- </div> -->
+                <br>
+                <label for = "patientAge" style="color:rgb(0, 0, 0);"><strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Age: </strong></label>
+                <h6 class="form-group" style="margin-left: 0.5%;" name="patientAge" id = "patientAge">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ patientAge }}</h6>
+                
+                <label for = "patientSex" style="color:rgb(0, 0, 0);"><strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Sex: </strong></label>
+                <h6 class="form-group" style="margin-left: 0.5%;" name="patientSex" id = "patientSex">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ patientSex }}</h6>
+              
+                <label for = "datetime" style="color:rgb(0, 0, 0);"><strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Date: </strong></label>
+                <h6 class="form-group" style="margin-left: 0.5%;" name="datetime" id = "datetime">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ datetime }}</h6>
+              
+              <script>
+                // Get the current date and time
+                const currentDateTime = new Date();
+            
+                // Format the date and time as a string
+                const formattedDateTime = currentDateTime.toLocaleString(undefined, {day:"numeric", month:"long", year: "numeric"});
+            
+                // Display the formatted date and time in the "datetime" paragraph
+                const datetimeElement = document.getElementById("datetime");
+                datetimeElement.textContent = formattedDateTime;
+              </script>
+          </div>
+          <br>
+          
+          <br>
+          <!-- <label  style="color:white">or enter patient name</label>
+          <div class="col-6 ">
+            <input name="PatientName"type="text" class="form-control" placeholder="Enter Patient Name">
+        </div> -->
+        
+        
+        
+        <table class = "prescription-table" id = "addPrescription">
+          <thead>
+            <tr>
+          <th>Before/After Food</th>
+          <th>Medicine</th>
+          <th>Morning</th>
+          <th>Afternoon</th>
+          <th>Night</th>
+          <th><button class="add-medicine hide" type="button" id="addMedicine"><strong>+</strong></button></th>
+          <!-- <th>No. of days</th> -->
+        </tr>
+        </thead>
+        
+          <tr class = "prescription-row">
+            <td>
+              
+              <!-- <select name="beforeAfter" id = "beforeAfter" class="form-control" placeholder="">
+              
+              <option id="beforeAfter" value = "{{ beforeAfter }}">{{ beforeAfter }}</option>
+              <option value = "">After</option></select> -->
+              <h6 name="beforeAfter" id = "beforeAfter" class="form-control">{{ beforeAfter }}</h6>
+            </td>
+            <td>
+              <select name="SelectedMedicine" id="SelectedMedicine" class="form-control" placeholder="Select Medicine">
+                    <option value="">Select Medicine</option>
+              {% for prescMedicine in prescMedicines %}
+                    
+                    <option value="{{ prescMedicine.MedicineName }}">{{ prescMedicine.MedicineName }}</option>
+              {% endfor %}
+              
+            </select>  
+           
+            </td>
+            <td>
+              
+              <!-- <select name="morning" id="morning" class="form-control" placeholder="">
+              
+              <option id="morning" value = "{{ morning }}">{{ morning }}</option>
+              <option value = "">1</option></select> -->
+              <h6 name="morning" id = "morning" class="form-control">{{ morning }}</h6>
+            </td>
+            <td>
+              
+              <!-- <select name="afternoon" id="afternoon" class="form-control" placeholder="">
+              <option id="afternoon" value = "{{ afternoon }}">{{ afternoon }}</option>
+              <option value = "">1</option> -->
+              <h6 name="afternoon" id = "afternoon" class="form-control">{{ afternoon }}</h6>
+            </td>
+            <td>
+             
+               <!-- <select name="night" id="night" class="form-control" placeholder="">
+              <option id="night" value = "{{ night }}">{{medAft}}</option>
+              <option value = "">1</option> -->
+              <h6 name="night" id = "night" class="form-control">{{ night }}</h6>
+            </td>
+          </tr>
+        </table>
+        <div id="medicine-data">
+          <!-- Data will be displayed here -->
+        </div>
+          <div class="form-group" style = "margin-left: 70%;">
+            <label class="form-group" for = "noOfDays" style="color:rgb(0, 0, 0);">For </label>
+            <input name="noOfDays" type="text" class="form-group" placeholder="days">
+            <label class="form-group" for = "noOfDays" style="color:rgb(0, 0, 0);">days </label>
+          </div>
+
+          
+          
+          <!-- <div class="form-group">
+              <label for="exampleFormControlTextarea1" style = "color:white">Please type the symptoms.</label>
+              <textarea name = "symptoms" class="form-control"  rows="5" placeholder="Symptoms"></textarea>
+          </div> -->
+          <br>
+        <!-- </form> -->
+        <!-- <form align="left" action="{% url 'doctorprofile' %}" method="post" style="margin-right:5%">
+            {% csrf_token %} -->
+          {% if request.session.writeNewPrescription %}
+          <div class="form-group" >
+    
+            <!-- <label  style="color:white">Please select a prescription from the dropdown.</label> -->
+            <!-- <div class="form-group">
+                <label for="exampleFormControlTextarea1">Please type the prescription.</label>
+                <textarea name = "prescription"style="text-align:center" class="form-control" id="exampleFormControlTextarea1" rows="3" placeholder="Prescription"></textarea>
+                <input type="hidden" name="prescriptionID" value="{{ prescription.id }}">
+            </div> -->
+            <!-- <select name="doctor" class="form-control" placeholder="Select Doctor">
+                {% for doctor in doctors %}
+                    <option value="{{ prescription.id }}">Dr. {{ doctor.id }}   ||   {{ doctor.specialization }} Specialist</option>
+                {% endfor %}
+            </select> -->
+    
+          </div>
+          <br>
+          <li class="dropdown-divider" style="margin-left:25%;margin-right:25%"></li>
+
+          <div class="form-group form-check hide">
+              <input type="checkbox" class="form-check-input" id="confirmCheck" >
+              <label class="form-check-label" ><span class="badge badge-success">CONFIRM</span></label>
+            </div>
+          <div class="hide" >
+            <!-- <button class="button first" id="generatePdfFile" align = "right" type ="submit" style="color:rgb(30, 126, 216); margin-left: 3%;" >Print/Save pdf</button> -->
+          <button id = "submit" type="submit" class="btn btn-warning first">Write Prescription</button>
+        </div>
+        {% endif %}
+        </form>
+    </div>
+      {% endif %}
+      {% endif %}
+      <script>
+        function sleep(milliseconds) {
+          const date = Date.now();
+          let currentDate = null;
+          do {
+            currentDate = Date.now();
+          } while (currentDate - date < milliseconds);
+        };
+        var pdfGnerated = false
+        var checkPdfSave = false
+        document.addEventListener('DOMContentLoaded', function () {
+          const confirmBox = document.getElementById("confirmCheck");
+          const pdfGenButton = document.getElementById("generatePdfFile");
+          confirmBox.addEventListener('click', function (event) {
+            var confirmUser = window.confirm("save as pdf?")
+            if (confirmUser) {
+              pdfGenButton.click();
+              checkPdfSave = true;
+              console.log('check', checkPdfSave);
+            }
+            else {
+               checkPdfSave = false;
+               
+                }
+              console.log('check', checkPdfSave);
+          });
+          
+        });
+        console.log('check', checkPdfSave);
+        document.addEventListener('DOMContentLoaded', function () {
+          const form = document.getElementById("prescriptionForm");
+          const submitbutton = document.getElementById("submit");
+          const pdfGenButton = document.getElementById("generatePdfFile");
+          // if (checkPdfSave == true) {
+            
+          form.addEventListener('submit', function (event) {
+          
+            console.log('check', checkPdfSave);
+
+           if (checkPdfSave ==  true) {
+            const confirmMessage = "Do you want to send a pdf of this prescription to the Patient ?"
+            var userConfirmed = window.confirm(confirmMessage);
+            
+            if (userConfirmed) {
+              $.ajax({
+                type : 'POST',
+                url : "{% url 'dummy' %}",
+                data : {
+              csrfmiddlewaretoken: '{{ csrf_token }}',
+                }
+                    });
+              submitbutton.click();
+              
+            } 
+            else {
+              $.ajax("{% url 'dummy' %}", {
+                 method : "GET",
+                 data : {
+              csrfmiddlewaretoken: '{{ csrf_token }}',
+                }
+               });
+               submitbutton.click();
+              }
+            }
+          });
+        
+        });
+      
+        //})
+        document.addEventListener("DOMContentLoaded", function() {
+          var prescriptiontable = document.getElementById("addPrescription");
+          var newmedicineRow = document.getElementById("addMedicine");
+          newmedicineRow.addEventListener("click", function() {
+            var newRow = prescriptiontable.querySelector(".prescription-row").cloneNode(true);
+            var newElements = newRow.querySelectorAll('h6 , select');
+            newElements.forEach(function(element) {
+              element.value = ''; 
+              //element.textContent = '';
+            });
+            // newRow.querySelector("#SelectedMedicine").value = "";
+            // newRow.querySelector("#beforeAfter").textContent = "";
+            // newRow.querySelector("#morning").textContent = "";
+            // newRow.querySelector("#afternoon").textContent = "";
+            // newRow.querySelector("#night").textContent = "";
+            prescriptiontable.appendChild(newRow);
+            var medicineSelect = newRow.querySelector('select[name="SelectedMedicine"]');
+            medicineSelect.addEventListener('change', function(){
+              var selectedMedicineValue = medicineSelect.value;
+              console.log("selected Medicine Value: ", selectedMedicineValue);
+              fetch(`addingMedicineData/${selectedMedicineValue}`)
+              .then(response=> response.json())
+              .then(data=> {
+              newRow.querySelector('h6[name = "morning"]').textContent = data.MedMorn
+              newRow.querySelector('h6[name = "afternoon"]').textContent = data.medAft
+              newRow.querySelector('h6[name = "night"]').textContent = data.medNight
+              newRow.querySelector('h6[name = "beforeAfter"]').textContent = data.MedBefAft
+            });
+            });
+          });
+        });
+    
+    
+    
+    
+        $('#generatePdfFile').click(function() {
+            var pdfGenerator = $(this).val();
+            //confUser = window.confirm("save as pdf?");
+           // if (confUser) {
+            $.ajax({
+              method: 'GET',
+              url : '{% url "generatePDF" %}',
+              data : {'pdfGenerator' : pdfGenerator},
+              dataType : 'json',
+              success : function(data) {
+                pdfGnerated = true            
+              },
+              error : function(xhr, status, error) {
+                console.error(xhr.responseText)
+              }
+            })
+            sleep(2000);
+          //}
+          })
+        
+          
+          
+        
+          $('#selectedPatient').change(function() {
+            var PatientSelected = $(this).val();
+            // var encodedName = encodeURIComponent(PatientSelected);
+            $.ajax({
+              method: 'GET',
+              url : '{% url "doctorprofile" %}',
+              data : {'SelectedPat' : PatientSelected},
+              dataType : 'json',
+              success : function(data) {
+                $('#patientSex').html(data.patientSex);
+                $('#patientAge').html(data.patientAge);
+                // $('#afternoon').html(data.medAft);
+                // $('#night').html(data.medNight);
+                //$('#medicine-data').html(
+                  //    'BeforeAfter: ' +  data.MedBefAft +
+                    //  '<br> Morning: ' + data.MedMorn +
+                      //'<br> Afternoon: ' + data.medAft +
+                      //'<br> Night: ' + data.medNight
+                  
+              },
+              error : function(xhr, status, error) {
+                console.error(xhr.responseText)
+              }
+              
+            });
+          });
+
+          $('#SelectedMedicine').change(function() {
+            var MedicineSelected = $(this).val();
+            $.ajax({
+              method: 'GET',
+              url : '{% url "doctorprofile" %}',
+              data : {'SelectedMed' : encodeURIComponent(MedicineSelected)},
+              dataType : 'json',
+              success : function(data) {
+                $('#beforeAfter').html(data.MedBefAft);
+                $('#morning').html(data.MedMorn);
+                $('#afternoon').html(data.medAft);
+                $('#night').html(data.medNight);
+                //$('#medicine-data').html(
+                  //    'BeforeAfter: ' +  data.MedBefAft +
+                    //  '<br> Morning: ' + data.MedMorn +
+                      //'<br> Afternoon: ' + data.medAft +
+                      //'<br> Night: ' + data.medNight
+                  
+              },
+              error : function(xhr, status, error) {
+                console.error(xhr.responseText)
+              }
+              
+            });
+          });
+        
+      </script>
+      {% endblock %}

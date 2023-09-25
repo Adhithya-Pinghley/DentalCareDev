@@ -1,0 +1,38 @@
+{% extends "HealthCentre/layout.html" %}
+{% load static %}
+{% block title %}
+NDC-Prescription
+{% endblock%}
+
+{% block script %}
+    <script src="{% static 'HealthCentre/javascript/checkboxConfirm.js' %}"></script>
+{% endblock %}
+
+{% block bodytag %}
+
+    {% load static %}
+    <body background="{% static 'HealthCentre/images/plain.jpg' %}" style="background-size: auto auto;">
+
+{% endblock %}
+
+
+{% block body %}
+
+
+
+</form>
+<br>
+<form method="POST">
+  {% csrf_token %}
+  <div class="row">
+      {{form.as_p}}
+  </div>
+  <div class="row">
+      <button class="btn btn-lg waves-effect waves-light mt-2 black-text" type="submit"
+          name="action">Submit
+          <i class="material-icons right">send</i>
+      </button>
+  </div>
+</form>
+
+{% endblock %}
