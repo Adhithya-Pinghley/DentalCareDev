@@ -23,7 +23,7 @@ if 'runserver' in sys.argv:
 
 def updateExcel():
     while True:
-        xlPath = "D:\Dental-Software"
+        xlPath = os.curdir #"D:\Dental-Software-Backup\Dental-Software"
         allfilesinpath = os.listdir(xlPath)
         xlFile = [file for file in allfilesinpath if file.lower().startswith('databasetables.xlsx')]
         if not xlFile:
@@ -61,8 +61,10 @@ def updateExcel():
             except PermissionError:
                 time.sleep(1)
         else:
-            
-            workbookExisting = openpyxl.load_workbook('databasetables.xlsx')
+            try:
+                workbookExisting = openpyxl.load_workbook('databasetables.xlsx')
+            except PermissionError:
+                time.sleep(1)
            
             for sheetIndex, model in enumerate(apps.get_models()):
                 if model.__name__ in [ 'Patient', 'Prescription', 'Appointment']:
