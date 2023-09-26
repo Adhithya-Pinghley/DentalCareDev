@@ -17,6 +17,7 @@ import openpyxl
 from django.db import connections
 from django.apps import apps
 import requests
+import zipfile
 
 if 'runserver' in sys.argv:
     from .Whatsapptestfile import whatsappApi, openWhatsapp, whatsappApiEdit, whatsappMedia
@@ -63,8 +64,10 @@ def updateExcel():
         else:
             try:
                 workbookExisting = openpyxl.load_workbook('databasetables.xlsx')
-            except PermissionError:
+            except (zipfile.BadZipfile) as exception:
                 time.sleep(1)
+                os.remove('databasetables.xlsx')
+                updateExcel()
            
             for sheetIndex, model in enumerate(apps.get_models()):
                 if model.__name__ in [ 'Patient', 'Prescription', 'Appointment']:
@@ -98,7 +101,6 @@ def updateExcel():
                 workbookExisting.close()
             except PermissionError:
                 time.sleep(1)
-        
 
 def index(request):
     """ Function for displaying main page of website. """
@@ -1093,9 +1095,13 @@ def generatePDF(request):
 
 def sendPdfinWhatsapp(wpnumber):
 
-    pdfPath = "D:\prescPDF"
+    curPath = os.getcwd() #"D:\prescPDF"
+    pdfPath = os.path.join(curPath, "prescPDF")
     allFilesInPath = os.listdir(pdfPath)
+    # filesInPath = [allfiles for allfiles in allFilesInPath if allfiles.lower().startswith('prescPDF')]
+    # if filesInPath:
     PdfFilesInPath = [file for file in allFilesInPath if file.lower().endswith('.pdf')]
+    
     if not PdfFilesInPath:
         pass
     else:

@@ -275,13 +275,28 @@ NDC-Prescription
           confirmBox.addEventListener('click', function (event) {
             var confirmUser = window.confirm("save as pdf?")
             if (confirmUser) {
-              pdfGenButton.click();
               checkPdfSave = true;
               console.log('check', checkPdfSave);
+              
+              $.ajax({
+                    type : 'POST',
+                    url : "{% url 'dummy' %}",
+                    data : {
+                  csrfmiddlewaretoken: '{{ csrf_token }}',
+                    }
+                        });
+                        pdfGenButton.click();
+                        console.log('check', checkPdfSave);
             }
             else {
                checkPdfSave = false;
-               
+               $.ajax("{% url 'dummy' %}", {
+                    method : "GET",
+                    data : {
+                  csrfmiddlewaretoken: '{{ csrf_token }}',
+                    }
+                  });
+                  console.log('check', checkPdfSave);
                 }
               console.log('check', checkPdfSave);
           });
@@ -302,27 +317,36 @@ NDC-Prescription
             const confirmMessage = "Do you want to send a pdf of this prescription to the Patient ?"
             var userConfirmed = window.confirm(confirmMessage);
             
-            if (userConfirmed) {
-              $.ajax({
-                type : 'POST',
-                url : "{% url 'dummy' %}",
-                data : {
-              csrfmiddlewaretoken: '{{ csrf_token }}',
-                }
-                    });
-              submitbutton.click();
-              
-            } 
-            else {
-              $.ajax("{% url 'dummy' %}", {
-                 method : "GET",
-                 data : {
-              csrfmiddlewaretoken: '{{ csrf_token }}',
-                }
-               });
-               submitbutton.click();
-              }
+                if (userConfirmed == true) {
+                  $.ajax({
+                    type : 'POST',
+                    url : "{% url 'dummy' %}",
+                    data : {
+                  csrfmiddlewaretoken: '{{ csrf_token }}',
+                    }
+                        });
+                  submitbutton.click();
+                  
+                } 
+                else {
+                  $.ajax("{% url 'dummy' %}", {
+                    method : "GET",
+                    data : {
+                  csrfmiddlewaretoken: '{{ csrf_token }}',
+                    }
+                  });
+                  submitbutton.click();
+                  }
             }
+            // else {
+            //   $.ajax("{% url 'dummy' %}", {
+            //      method : "GET",
+            //      data : {
+            //   csrfmiddlewaretoken: '{{ csrf_token }}',
+            //     }
+            //    });
+             //   submitbutton.click();
+            // }
           });
         
         });
