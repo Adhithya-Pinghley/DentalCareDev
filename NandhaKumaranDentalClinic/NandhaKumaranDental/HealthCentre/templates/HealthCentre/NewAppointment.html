@@ -30,7 +30,13 @@ NDC-Prescription
       <br>
       {% endif %}
       {% endif %}
+      {% if existingAppointmentStatus %}
+    <div style="text-align:center;margin:0 auto;"class="alert alert-danger" role="alert" >
+        {{ existingAppointmentStatus }}
+    </div>
+{% endif %}
       {% if not request.session.appointmentEdit %}
+      
       <form action="{% url 'doctorappointments' %}" method="post" align="center">
         {% csrf_token %}
 
