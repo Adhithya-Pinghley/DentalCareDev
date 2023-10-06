@@ -84,9 +84,9 @@ WSGI_APPLICATION = 'DentalCare.wsgi.application'
 DATABASES = {
    'default': {
        'ENGINE': 'django.db.backends.postgresql',
-       'NAME': 'hms',
+       'NAME': 'hms_server',
        'USER': 'postgres',
-       'PASSWORD': '12345',
+       'PASSWORD': '8754412833',
        'HOST': 'localhost',
        'PORT': '5432',
    }
