@@ -45,6 +45,13 @@ class Medicine(models.Model):
     class Meta:
         db_table = 'healthcentre_medicine'
 
+class timeofday(models.Model):
+    timeoftheday = models.CharField(max_length = 12)
+    
+    def __str__(self):
+        return "\ntimeoftheday :" + str(self.timeoftheday) + '\n\n'
+    class Meta:
+        db_table = 'healthcenter_timeofday'
 class Prescription(models.Model):
     prescriptionText = models.CharField(max_length = 2000, default = "", db_column = 'prescriptiontext')
     prescribingDoctor = models.CharField(max_length= 2000, default= "", db_column = 'prescribingdoctor')
@@ -53,7 +60,7 @@ class Prescription(models.Model):
     patient = models.ForeignKey(Patient, related_name = "patientRecords", on_delete = models.CASCADE, db_column = 'patient_id')
     # beforeafter = models.CharField(max_length= 10)
     medicine    = models.ManyToManyField(to= Medicine)
-    # MornAftNight = models.CharField(max_length=10)
+    MornAftNight = models.ManyToManyField(to= timeofday)
     NoOfDays = models.CharField(max_length=10, db_column = 'noofdays')
     timestamp = models.DateTimeField(auto_now_add=True)
     isNew = models.BooleanField(default = True, db_column = 'isnew')
