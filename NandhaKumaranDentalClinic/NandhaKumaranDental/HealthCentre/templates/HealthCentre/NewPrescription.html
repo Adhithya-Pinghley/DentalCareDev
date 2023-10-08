@@ -206,6 +206,15 @@ NDC-Prescription
               <option value = "">1</option> -->
               <h6 name="night" id = "night" class="form-control">{{ night }}</h6>
             </td>
+            <td>
+              <select name="SelectedSession" id="SelectedSession" class="form-control">
+                <option value="">Select dosage</option>
+          {% for prescTime in prescTimeOfDay %}
+                <option value="{{ prescTime.timeoftheday }}">{{ prescTime.timeoftheday }}</option>
+          {% endfor %}
+              </select>
+            </td>
+
           </tr>
         </table>
         <div id="medicine-data">
@@ -260,6 +269,7 @@ NDC-Prescription
       {% endif %}
       {% endif %}
       <script>
+        
         function sleep(milliseconds) {
           const date = Date.now();
           let currentDate = null;
@@ -367,6 +377,13 @@ NDC-Prescription
             // newRow.querySelector("#morning").textContent = "";
             // newRow.querySelector("#afternoon").textContent = "";
             // newRow.querySelector("#night").textContent = "";
+            
+              const prescriptionsession = document.querySelector("select[name='SelectedSession']");
+              prescriptionsession.addEventListner('change', function(){
+                var SelectedSessionValue = prescriptionsession.value;
+                 fetch(``) 
+              })
+            
             prescriptiontable.appendChild(newRow);
             var medicineSelect = newRow.querySelector('select[name="SelectedMedicine"]');
             medicineSelect.addEventListener('change', function(){
@@ -443,6 +460,32 @@ NDC-Prescription
               method: 'GET',
               url : '{% url "doctorprofile" %}',
               data : {'SelectedMed' : encodeURIComponent(MedicineSelected)},
+              dataType : 'json',
+              success : function(data) {
+                $('#beforeAfter').html(data.MedBefAft);
+                $('#morning').html(data.MedMorn);
+                $('#afternoon').html(data.medAft);
+                $('#night').html(data.medNight);
+                //$('#medicine-data').html(
+                  //    'BeforeAfter: ' +  data.MedBefAft +
+                    //  '<br> Morning: ' + data.MedMorn +
+                      //'<br> Afternoon: ' + data.medAft +
+                      //'<br> Night: ' + data.medNight
+                  
+              },
+              error : function(xhr, status, error) {
+                console.error(xhr.responseText)
+              }
+              
+            });
+          });
+
+          $('#SelectedSession').change(function() {
+            var SessionSelected = $(this).val();
+            $.ajax({
+              method: 'GET',
+              url : '{% url "doctorprofile" %}',
+              data : {'SelectedMed' : encodeURIComponent(SessionSelected)},
               dataType : 'json',
               success : function(data) {
                 $('#beforeAfter').html(data.MedBefAft);

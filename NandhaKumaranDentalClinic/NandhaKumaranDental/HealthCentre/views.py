@@ -2,7 +2,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from .models import Doctor, Patient, Prescription, passwordHasher, emailHasher, Appointment, Medicine
+from .models import Doctor, Patient, Prescription, passwordHasher, emailHasher, Appointment, Medicine, timeofday
 from django.db.models import Count, Q
 from django.contrib.auth.decorators import login_required
 from .forms import AppointmentSet, AppointmentSetForm, AppointmentForm
@@ -764,10 +764,11 @@ def deleteappointment(request, pk):
     return responseHeadersModifier(response)
 
 selectedMedicineID = []
-def addingMedicineData(request, selectedMedicineValue):
+def addingMedicineData(request, selectedMedicineValue, SelectedSessionValue):
 
         try:
             SelectedMedicine = Medicine.objects.get(MedicineName = selectedMedicineValue)
+            SelectedSession = timeofday.objects.get(timeoftheday = SelectedSessionValue)
             SelectedBeforeAfter = SelectedMedicine.beforeAfter
             SelectedMorning = SelectedMedicine.Morning
             SelectedAfternoon = SelectedMedicine.Afternoon
@@ -813,7 +814,8 @@ def doctorprofile(request):
             context = {
                     "patients" : Patient.objects.all().order_by('id'),
                     # "prescPatients" : Prescription.objects.all().order_by('id'),
-                    "prescMedicines" : Medicine.objects.all().order_by('MedicineName')
+                    "prescMedicines" : Medicine.objects.all().order_by('MedicineName'),
+                    "prescTimeOfDay" : timeofday.objects.all().order_by('id')
                     }
             response = render(request, "HealthCentre/NewPrescription.html", context)
             return responseHeadersModifier(response)
