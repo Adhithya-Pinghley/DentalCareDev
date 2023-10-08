@@ -50,6 +50,13 @@ def whatsappApi(patientName, whatsappNumber, time, date):
 
     # Simple message
     result = openWhatsapp.client.sendText(phone_number, message)
+    
+def whatsappApiDoc(doctorName, whatsappNumber, time, date):
+    phone_number = f"+91{whatsappNumber}" #phone_number = "+917904427507"  # or "+201016708170"
+    message = f"Dear, {doctorName} This is Dr.Nanda's Dental Clinic. Your Appointment is fixed at {time} on {date}. Please do not forget your prescription!! Thansk!!"
+
+    # Simple message
+    result = openWhatsapp.client.sendText(phone_number, message)
 
 def whatsappApiEdit(patientName, whatsappNumber, time, date):
     # reclient= openWhatsapp.client

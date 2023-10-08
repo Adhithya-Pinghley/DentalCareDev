@@ -8,7 +8,11 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
+<<<<<<< HEAD
 set VIRTUAL_ENV=D:\ThunderDentalcare\DentalCareDev\.venv
+=======
+set VIRTUAL_ENV=E:\Dental-Software\DentalCareDev\.venv
+>>>>>>> f6ef8b36eea931edaf65e082339e61a42f072549
 
 if not defined PROMPT set PROMPT=$P$G
 

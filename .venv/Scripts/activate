@@ -38,7 +38,11 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
+<<<<<<< HEAD
 VIRTUAL_ENV="D:\ThunderDentalcare\DentalCareDev\.venv"
+=======
+VIRTUAL_ENV="E:\Dental-Software\DentalCareDev\.venv"
+>>>>>>> f6ef8b36eea931edaf65e082339e61a42f072549
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

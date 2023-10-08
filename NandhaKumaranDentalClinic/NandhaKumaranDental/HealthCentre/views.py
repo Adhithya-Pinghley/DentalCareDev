@@ -20,7 +20,7 @@ import requests
 import zipfile
 
 if 'runserver' in sys.argv:
-    from .Whatsapptestfile import whatsappApi, openWhatsapp, whatsappApiEdit, whatsappMedia
+    from .Whatsapptestfile import whatsappApi, openWhatsapp, whatsappApiEdit, whatsappMedia, whatsappApiDoc
 
 def updateExcel():
     while True:
@@ -163,6 +163,9 @@ def register(request):
                     
             # Creating a patient object and saving insdie the database if patient is selected
             elif userType == 'doctor':
+                
+                passwordHash = passwordHasher(userPassword)
+                emailHash = emailHasher(userEmail)
                 doctor = Doctor(name = name, specialization= userRollNo, email = userEmail, passwordHash = passwordHash, address = userAddress, contactNumber = userContactNo, emailHash = emailHash)
                 doctor.save()
 
@@ -551,6 +554,13 @@ def doctorappointments(request):
         response = render(request, 'HealthCentre/NewAppointment.html', context)
         return responseHeadersModifier(response)
     if request.method == 'POST':
+        currentDateTime = datetime.now()
+        currentHourObj = datetime.strftime(currentDateTime, "%H")
+        currentMinuteObj = datetime.strftime(currentDateTime, "%M")
+        currentDateObj = datetime.strftime(currentDateTime, "%d")
+        currentMonthObj = datetime.strftime(currentDateTime, "%m")
+        currentYearObj = datetime.strftime(currentDateTime, "%Y")
+        
         if request.session['goToAppointmentsPage']:
             if request.POST['selectedPatient'] == "":
                 appointmentPatient = request.POST['PatientNameForAppointment']
@@ -562,28 +572,88 @@ def doctorappointments(request):
                 patient = Patient.objects.get(name=patient_id)
             appointmentTime = request.POST['EnterTimeHour'].zfill(2) + request.POST['EnterTimeMinute'].zfill(2)
             datetimeObject = datetime.strptime(appointmentTime, "%H%M")
+            datetimeObject = datetimeObject.time()
+            
+            currentDateTimeObj = currentDateObj + currentMonthObj + currentYearObj
+            currentDateTimeObj = datetime.strptime(currentDateTimeObj, "%d%m%Y")
+            currentDateTimeObj = currentDateTimeObj.date()
+            
+            currentTimeObj = currentHourObj + currentMinuteObj
+            currentTimeObj = datetime.strptime(currentTimeObj, "%H%M")
+            currentTimeObj1 = currentTimeObj.time()
+            currentTimeObjPlusThreeHours = currentTimeObj + timedelta(hours= 3)
+            currentTimeObjPlusThreeHours1 = currentTimeObjPlusThreeHours.time()
+            hourObject = datetime.strftime(currentTimeObjPlusThreeHours, "%H")
+            minuteObject = datetime.strftime(currentTimeObjPlusThreeHours, "%M")
+            strTimeObject = hourObject + minuteObject
+            datetimeObjectplusThree = datetime.strptime(strTimeObject, "%H%M")
+            datetimeObjectplusThree = datetimeObjectplusThree.time()
+            
             appointmentDate = request.POST['EnterDate'] + request.POST['EnterDateMonth'] + request.POST['EnterYear']
             dateobject = datetime.strptime(appointmentDate, "%d%m%Y")
+            dateobject = dateobject.date()
+            currentDateObject = currentDateObj + currentMonthObj + currentYearObj 
+            currentDateObject = datetime.strptime(currentDateObject, "%d%m%Y")
+            
             appointmentNotes = request.POST['AppointmentDescription']
             appointmentDoctor = request.session['Name']
             appointmentSubject = "subject"
             doctor_id = request.session['Name']
             doctorid = Doctor.objects.get(name=doctor_id)
-            appointment = Appointment(time = datetimeObject, date = dateobject, subject = appointmentSubject, notes = appointmentNotes,
-                                        appointmentpatient = appointmentPatient, appointmentdoctor = appointmentDoctor, doctorPres = doctorid,
-                                        patientPres = patient)
-            appointment.save()
-            doctor = Doctor.objects.get(emailHash = request.session['userEmail'])
-            records = doctor.doctorRecords.all()
-            context = {
-            "message" : "Successfully Logged In.",
-            "isAuthenticated" : True,
-            "user": records.order_by('-timestamp'),
-            "Appointments" : Appointment.objects.all().order_by('-date')
-        }
-        # whatsappNotification()
-        response = HttpResponseRedirect(reverse('doctorappointmentsfalse'))
-        return responseHeadersModifier(response)
+                # existingDate = Appointment.objects.filter(date = dateobject)
+            try:
+                existingTime = Appointment.objects.get(Q(time = datetimeObject) & Q(date = dateobject))
+            except Appointment.DoesNotExist:
+                existingTime = None
+                pass
+                    
+            # for extime in existingTime:
+            #     if existingTime == None:
+            #         pass
+            if existingTime != None:
+                existingAppointmentTime = existingTime.time # extime.time
+                # existingAppointmentTime = existingAppointmentTime.time()
+                existingAppointmentDate = existingTime.date #  extime.date
+                # existingAppointmentDate = existingAppointmentDate.time()
+                if existingAppointmentTime == datetimeObject and existingAppointmentDate == dateobject:
+                    existingAppointmentStatus = "You already have another appointment at this time! Please set another time" 
+                    doctor = Doctor.objects.get(emailHash = request.session['userEmail'])
+                    records = doctor.doctorRecords.all() 
+                    context = {
+                            "message" : "Successfully Logged In.",
+                            "isAuthenticated" : True,
+                            "user": records.order_by('-timestamp'),
+                            "Appointments" : Appointment.objects.all().order_by('-date'),
+                            "existingAppointmentStatus" : existingAppointmentStatus
+                            }
+            
+                    response = render(request,'HealthCentre/NewAppointment.html', context)
+                    return responseHeadersModifier(response)
+            else :
+                appointment = Appointment(time = datetimeObject, date = dateobject, subject = appointmentSubject, notes = appointmentNotes,
+                                            appointmentpatient = appointmentPatient, appointmentdoctor = appointmentDoctor, doctorPres = doctorid,
+                                            patientPres = patient)
+                appointment.save()
+                doctorDetail = Doctor.objects.get(name = doctor_id)
+                doctorNumber = doctorDetail.contactNumber
+                patientDetail = Patient.objects.get(name = patient_id)
+                patientNumber = patientDetail.contactNumber
+                if (datetimeObject < datetimeObjectplusThree) and (datetimeObject > currentTimeObj1) and (currentDateTimeObj == dateobject):
+                    whatsappApi(patient_id, patientNumber, datetimeObject, dateobject)
+                    whatsappApiDoc(doctor_id, doctorNumber, datetimeObject, dateobject)
+                    # time.sleep(60)
+                    
+                doctor = Doctor.objects.get(emailHash = request.session['userEmail'])
+                records = doctor.doctorRecords.all()
+                context = {
+                "message" : "Successfully Logged In.",
+                "isAuthenticated" : True,
+                "user": records.order_by('-timestamp'),
+                "Appointments" : Appointment.objects.all().order_by('-date')
+            }
+            # whatsappNotification()
+                response = HttpResponseRedirect(reverse('doctorappointmentsfalse'))
+                return responseHeadersModifier(response)
 
 def editAppointments(request, pk):
     request.session['appointmentEdit'] = True
@@ -1033,11 +1103,16 @@ def whatsappNotification():
                 AppointmentTime = getappointmentTime.time
                 AppointmentDate = getappointmentTime.date
                 patientName=getappointmentTime.appointmentpatient
+                doctorName = getappointmentTime.appointmentdoctor
+                doctorDetail = Doctor.objects.get(name = doctorName)
+                doctorNumber = doctorDetail.contactNumber
                 patientDetail = Patient.objects.get(name=patientName)
                 patientNumber = patientDetail.contactNumber
                 if (AppointmentDate == currentDate):
                     whatsappApi(patientName, patientNumber, AppointmentTime, AppointmentDate)
+                    whatsappApiDoc(doctorName, doctorNumber, AppointmentTime, AppointmentDate)
                     time.sleep(60)
+                
         # while True:
         #     updateExcel()
         #     time.sleep(900)
