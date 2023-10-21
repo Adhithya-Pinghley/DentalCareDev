@@ -32,6 +32,15 @@ NDC-Prescription
             </div>
     {% endif %}
     <style>
+      .Patient-Medicine {
+        visibility: hidden ; 
+      }
+      .patMed{
+        visibility: none;
+      }
+      #unhideInput {
+        visibility: none;
+      }
       .a-right {
         position: fixed;
         right: 50px;
@@ -63,6 +72,7 @@ NDC-Prescription
         <!-- <li class = "button"> --> <br>
           <a class="button"  align = "right" type ="submit" style="color:rgb(30, 126, 216); margin-left: 3%;" href="{% url 'register' %}">Add new patient</a>
         <!-- </li> -->
+          
         <button class="button" id="generatePdfFile" align = "right" type ="submit" style="color:rgb(30, 126, 216); margin-left: 3%;" >Print/Save pdf</button>
     </li> 
     <!-- href="{% url 'generatePDF' %}" -->
@@ -74,6 +84,7 @@ NDC-Prescription
       <!-- </form> -->
     
       <style>
+
         .prescription-table {
           width: 100%;
           border-collapse: collapse;
@@ -101,7 +112,63 @@ NDC-Prescription
         }
     </style>
     <!-- style="margin-right: 90%;" -->
-    
+
+    <form onsubmit="return checkConfirm()" action="{% url 'doctorprofile' %}" method="post" id="prescriptionForm">
+      {% csrf_token %}
+      <a href="#" id="hideInput"  style="color : rgba(18, 136, 239, 0.921); margin-left: 3%;" >Write Medicine</a>
+      <div class="Patient-Medicine" >
+        <label for="patientMedicine" > Medicine </label>
+        <input id="patientMedicine" style="color:rgba(1, 10, 18, 0.701); margin-left:4.5%;" type="text" placeholder="Medicine">
+        <br>
+        <label for="patMedicine" > BeforeAfter Food </label>
+        <input id="patMedicine"style="color: rgba(1, 10, 18, 0.701) ; margin-left:2%;" type="text" placeholder="BeforeAfter Food">
+        <br>
+        <input id="confirmCheck" type="checkbox">
+        <span class="badge badge-success" style="display : none;">CONFIRM</span>
+        <br>
+        <button >submit</button>
+
+        <br>
+      
+      </div>
+    <a href="#" id="patMedicine"  style="color : rgba(18, 136, 239, 0.921); margin-left: 3%;" >Write Medicine</a>
+      <div class="patMed" >
+        <label for="patientMedicine" > Medicine </label>
+        <input id="patientMedicine" style="color:rgba(1, 10, 18, 0.701); margin-left:4.5%;" type="text" placeholder="Medicine">
+        <br>
+        <label for="patMedicine" > BeforeAfter Food </label>
+        <input id="patMedicine"style="color: rgba(1, 10, 18, 0.701) ; margin-left:2%;" type="text" placeholder="BeforeAfter Food">
+        <br>
+        <input id="confirmCheck" type="checkbox">
+        <span class="badge badge-success" style="display : none;">CONFIRM</span>
+        <br>
+        <button >submit</button>
+
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>  
+          $(document).ready(function() {
+          $(".Patient-Medicine").click(function() {
+          $.ajax({
+            type: "GET",
+            url: "{% url 'doctorprofile' %}",
+            success: function(data) {
+                // Assuming the response contains data indicating you should unhide the elements
+                if (data.shouldUnhide) {
+                    $(".patMed").show(); // This will display the hidden elements
+                }
+            },
+                error: function() {
+                console.log("An error occurred during the AJAX request.");
+                }
+              });
+            });
+          });
+        </script>          
+      
+      </div>
+    </form>   
+
         <form onsubmit="return checkConfirm()" action="{% url 'doctorprofile' %}" method="post" id="prescriptionForm">
           {% csrf_token %}
           <div class="container center_div"style = "background:rgba(255,255,255);padding-top:2%;padding-bottom:2%" width="300px">  
@@ -164,6 +231,8 @@ NDC-Prescription
         </tr>
         </thead>
         
+        </div>
+        </form>
           <tr class = "prescription-row">
             <td>
               
@@ -268,7 +337,9 @@ NDC-Prescription
     </div>
       {% endif %}
       {% endif %}
-      <script>
+      
+    
+    <script>
         
         function sleep(milliseconds) {
           const date = Date.now();
@@ -378,12 +449,7 @@ NDC-Prescription
             // newRow.querySelector("#afternoon").textContent = "";
             // newRow.querySelector("#night").textContent = "";
             
-              const prescriptionsession = document.querySelector("select[name='SelectedSession']");
-              prescriptionsession.addEventListner('change', function(){
-                var SelectedSessionValue = prescriptionsession.value;
-                 fetch(``) 
-              })
-            
+              
             prescriptiontable.appendChild(newRow);
             var medicineSelect = newRow.querySelector('select[name="SelectedMedicine"]');
             medicineSelect.addEventListener('change', function(){
@@ -398,6 +464,17 @@ NDC-Prescription
               newRow.querySelector('h6[name = "beforeAfter"]').textContent = data.MedBefAft
             });
             });
+            var prescriptionsession = newRow.querySelector("select[name='SelectedSession']");
+        prescriptionsession.addEventListener('change', function(){
+          var SelectedSessionValue = prescriptionsession.value;
+           fetch(`addingMedicineData/${SelectedSessionValue}`)
+           .then(response=> response.json())
+           .then(data=>{
+            newRow.querySelector('h6[name = "morning"]').textContent = data.MedMorn
+            newRow.querySelector('h6[name = "afternoon"]').textContent = data.medAft
+            newRow.querySelector('h6[name = "night"]').textContent = data.medNight    
+           }); 
+        });
           });
         });
     
