@@ -616,7 +616,7 @@ def doctorappointments(request):
                 existingAppointmentDate = existingTime.date #  extime.date
                 # existingAppointmentDate = existingAppointmentDate.time()
                 if existingAppointmentTime == datetimeObject and existingAppointmentDate == dateobject:
-                    existingAppointmentStatus = "You already have another appointment at this time! Please set another time" 
+                    existingAppointmentStatus = "You already have another appointment at this time! Please set another time"
                     doctor = Doctor.objects.get(emailHash = request.session['userEmail'])
                     records = doctor.doctorRecords.all() 
                     context = {
@@ -764,24 +764,61 @@ def deleteappointment(request, pk):
     return responseHeadersModifier(response)
 
 selectedMedicineID = []
-def addingMedicineData(request, selectedMedicineValue, SelectedSessionValue):
+selectedSessionID = []
+def createNewMedicine(request):
+    if request.method == "POST":
+        newMedicine = request.POST["NewmedicineName"]
+        befAft = request.POST["befAftFood"]
+        
+        medicine = Medicine(medicinename = newMedicine, beforeafter = befAft, morning = "0", afternoon = "0", night = "0")
+        medicine.save()
+    response = HttpResponseRedirect(reverse('doctorprofile'))
+    return responseHeadersModifier(response)
+
+def addingSessionData(request, SelectedSessionValue):
+    try:
+        SelectedSession = timeofday.objects.get(timeoftheday = SelectedSessionValue)
+        SelectedMorning = SelectedSessionValue[0]
+        SelectedAfternoon = SelectedSessionValue[3]
+        SelectedNight = SelectedSessionValue[6]
+        sessionID = SelectedSession.pk
+        selectedSessionID.append(sessionID)
+        data = {
+                    # "MedBefAft" : SelectedBeforeAfter,
+                    "MedMorn" : SelectedMorning,
+                    "medAft"   : SelectedAfternoon,
+                    "medNight" : SelectedNight,
+                    # "patients" : Patient.objects.all().order_by('id'),
+                    # "prescPatients" : Prescription.objects.all().order_by('id'),
+                    # "prescMedicines" : Medicine.objects.all().order_by('MedicineName')
+                }
+        return JsonResponse(data)
+            # response = render(request, "HealthCentre/NewPrescription.html", data)
+            # return responseHeadersModifier(response)
+    except timeofday.DoesNotExist:
+        return JsonResponse({'error': 'Session not found'}, status=404)
+
+def addingMedicineData(request, selectedMedicineValue):
 
         try:
-            SelectedMedicine = Medicine.objects.get(MedicineName = selectedMedicineValue)
-            SelectedSession = timeofday.objects.get(timeoftheday = SelectedSessionValue)
-            SelectedBeforeAfter = SelectedMedicine.beforeAfter
-            SelectedMorning = SelectedMedicine.Morning
-            SelectedAfternoon = SelectedMedicine.Afternoon
-            SelectedNight = SelectedMedicine.Night
+            SelectedMedicine = Medicine.objects.get(medicinename = selectedMedicineValue)
+            
+            SelectedBeforeAfter = SelectedMedicine.beforeafter
+            # SelectedMorning = SelectedMedicine.Morning
+            # SelectedAfternoon = SelectedMedicine.Afternoon
+            # SelectedNight = SelectedMedicine.Night
+            
             medicineID = SelectedMedicine.pk
+            
             selectedMedicineID.append(medicineID)
+            
             # prescription = Prescription.objects.get(id= getPrescriptionID)
             # prescription.medicine.add(medicineID)
             data = {
                 "MedBefAft" : SelectedBeforeAfter,
-                "MedMorn" : SelectedMorning,
-                "medAft"   : SelectedAfternoon,
-                "medNight" : SelectedNight,
+                # "MedMorn" : SelectedMorning,
+                # "medAft"   : SelectedAfternoon,
+                # "medNight" : SelectedNight,
                 # "patients" : Patient.objects.all().order_by('id'),
                 # "prescPatients" : Prescription.objects.all().order_by('id'),
                 # "prescMedicines" : Medicine.objects.all().order_by('MedicineName')
@@ -810,11 +847,11 @@ def doctorprofile(request):
      if request.method == 'GET':
         request.session['writeNewPrescription'] = True
 
-        if request.GET.get('SelectedMed') == None and request.GET.get('SelectedPat') == None:
+        if request.GET.get('SelectedMed') == None and request.GET.get('SelectedPat') == None and request.GET.get('SelectedSess') == None:
             context = {
                     "patients" : Patient.objects.all().order_by('id'),
                     # "prescPatients" : Prescription.objects.all().order_by('id'),
-                    "prescMedicines" : Medicine.objects.all().order_by('MedicineName'),
+                    "prescMedicines" : Medicine.objects.all().order_by('medicinename'),
                     "prescTimeOfDay" : timeofday.objects.all().order_by('id')
                     }
             response = render(request, "HealthCentre/NewPrescription.html", context)
@@ -830,25 +867,40 @@ def doctorprofile(request):
                 return JsonResponse(data)
             except Patient.DoesNotExist:
                 return JsonResponse({'error': 'Patient not found'}, status=404)
-
+            
+        if request.GET.get('SelectedSess') != None and request.method == 'GET':
+            SesssionTime = request.GET.get('SelectedSess', None)
+            try:
+                SelectedSession = timeofday.objects.get(timeoftheday = SesssionTime)
+                sessionID = SelectedSession.pk
+                selectedSessionID.append(sessionID)
+                SelectedMorning = SesssionTime[0]
+                SelectedAfternoon = SesssionTime[3]
+                SelectedNight = SesssionTime[6]
+                data = {
+                        "MedMorn" : SelectedMorning,
+                        "medAft"   : SelectedAfternoon,
+                        "medNight" : SelectedNight,
+                    }
+                return JsonResponse(data)
+            except timeofday.DoesNotExist:
+                return JsonResponse({'error': 'Session not found'}, status=404)
+        
         if request.GET.get('SelectedMed') != None and request.method == 'GET':
     
             MedicineName = request.GET.get('SelectedMed', None)
             
             try:
                 # SelectedMedicine = Medicine.objects.get(MedicineName = selectedMedicineValue)
-                SelectedMedicine = Medicine.objects.get(MedicineName = MedicineName)
+                SelectedMedicine = Medicine.objects.get(medicinename = MedicineName)
                 medicineID = SelectedMedicine.pk
                 selectedMedicineID.append(medicineID)
-                SelectedBeforeAfter = SelectedMedicine.beforeAfter
-                SelectedMorning = SelectedMedicine.Morning
-                SelectedAfternoon = SelectedMedicine.Afternoon
-                SelectedNight = SelectedMedicine.Night
+                SelectedBeforeAfter = SelectedMedicine.beforeafter
                 data = {
                     "MedBefAft" : SelectedBeforeAfter,
-                    "MedMorn" : SelectedMorning,
-                    "medAft"   : SelectedAfternoon,
-                    "medNight" : SelectedNight,
+                    # "MedMorn" : SelectedMorning,
+                    # "medAft"   : SelectedAfternoon,
+                    # "medNight" : SelectedNight,
                 }
                 return JsonResponse(data)
             except Medicine.DoesNotExist:
@@ -862,7 +914,7 @@ def doctorprofile(request):
                 patient = Patient.objects.create(name=prescpatient)
             else:
                 prescpatient = request.POST['selectedPatient']
-                patient_id = request.POST['selectedPatient'] 
+                patient_id = request.POST['selectedPatient']
                 patient = Patient.objects.get(name=patient_id)
 
             symptoms = "dummy"#request.POST["symptoms"]
@@ -872,9 +924,10 @@ def doctorprofile(request):
                 doctor_id = request.session['Name']
                 doctor = Doctor.objects.get(name=doctor_id)
                 medicine = request.POST['SelectedMedicine']
-                MedicineObject = Medicine.objects.get(MedicineName = medicine)
+                MedicineObject = Medicine.objects.get(medicinename = medicine)
                 
                 selectedMedicines = Medicine.objects.filter(id__in = selectedMedicineID)
+                selectedSessions = timeofday.objects.filter(id__in = selectedSessionID)
                 # MedName = MedicineObject.MedicineName
                 NoOfDays = request.POST['noOfDays']
                 # patient_id = request.POST['selectedPatient'] 
@@ -885,6 +938,7 @@ def doctorprofile(request):
                 global getPrescriptionID 
                 getPrescriptionID = prescription.pk
                 prescription.medicine.set(selectedMedicines)
+                prescription.MornAftNight.set(selectedSessions)
                 wpnumber = patientObj.contactNumber
                 global dummyBoolean
                 if dummyBoolean == True:

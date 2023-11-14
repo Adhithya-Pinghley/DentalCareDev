@@ -22,7 +22,7 @@ class Patient(models.Model):
     name = models.CharField(unique = True, max_length = 30)
     address = models.CharField(max_length = 100)
     contactNumber = models.CharField(max_length = 10, db_column = 'contactnumber')
-    email = models.EmailField(max_length = 255)
+    email = models.EmailField(max_length = 255, null= True, blank= True)
     rollNumber = models.CharField(max_length = 8, db_column = 'rollnumber')
     passwordHash = models.CharField(max_length = 64, db_column = 'passwordhash')
     emailHash = models.CharField(max_length = 64, db_column = 'emailhash')
@@ -34,14 +34,14 @@ class Patient(models.Model):
         # db_column = 'contactnumber', 'rollnumber', 'passwordhash', 'emailhash'
 
 class Medicine(models.Model):
-    MedicineName = models.CharField(max_length= 200)
-    beforeAfter = models.CharField(max_length= 200)
-    Morning = models.CharField(max_length= 200)
-    Afternoon = models.CharField(max_length= 200)
-    Night   = models.CharField(max_length= 200)
+    medicinename = models.CharField(max_length= 200)
+    beforeafter = models.CharField(max_length= 200)
+    morning = models.CharField(max_length= 200, blank= True)
+    afternoon = models.CharField(max_length= 200, blank= True)
+    night   = models.CharField(max_length= 200, blank= True)
 
     def __str__(self):
-        return "\nMedicineName :" + str(self.MedicineName) + "\nBeforeAfter :" + str(self.beforeAfter) + "\nMorning :" + str(self.Morning) + "\nAfternoon :" + str(self.Afternoon) + "\nNight :" + str(self.Night) + "\n\n"
+        return "\nmedicinemame :" + str(self.medicinename) + "\nbeforeafter :" + str(self.beforeafter) + "\nmorning :" + str(self.morning) + "\nafternoon :" + str(self.afternoon) + "\nnight :" + str(self.night) + "\n\n"
     class Meta:
         db_table = 'healthcentre_medicine'
 
