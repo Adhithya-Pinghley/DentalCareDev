@@ -894,6 +894,44 @@ def doctorprofile(request):
                 }
         response = render(request, "HealthCentre/prescriptionportal.html", context)
         return responseHeadersModifier(response)
+     
+def createTimeline(request):
+    if request.method == 'GET':
+
+        if request.GET.get('SelectedPat') == None:
+                context = {
+                        "patients" : Patient.objects.all().order_by('id'),
+                        
+                        }
+                response = render(request, "HealthCentre/timeline.html", context)
+                return responseHeadersModifier(response)
+    if request.method == 'POST':
+            # PatientName = request.GET.get('SelectedPat', None)
+            PatientName = request.POST['selectedPatient']
+            try: 
+                selectedPatient = Patient.objects.get(name = PatientName)
+                selectedPatientID = selectedPatient.pk
+                try:
+                    appointmentData = Appointment.objects.filter(patientPres = selectedPatientID).order_by('date')
+                    # serializedData = serialize('json', appointmentData) 
+                except Appointment.DoesNotExist:
+                    for singleappointmentData in appointmentData:
+                        singleappointmentData = None    
+                
+                    # prescriptionData = Prescription.objects.filter(patientPres = selectedPatientID).order_by('date')
+
+
+                context = {
+                    "patients" : Patient.objects.all().order_by('id'),
+                    "appointmentData" : appointmentData,
+                    # "prescriptionData" : prescriptionData,                    
+                }
+                response = render(request, "HealthCentre/timeline.html", context)
+                return responseHeadersModifier(response)
+                # return JsonResponse(data)
+            except Patient.DoesNotExist:
+                return JsonResponse({'error': 'Patient not found'}, status=404)
+        
 
 def deleteprescription(request, pk):
     # request.session['deleteAppointment'] = True
