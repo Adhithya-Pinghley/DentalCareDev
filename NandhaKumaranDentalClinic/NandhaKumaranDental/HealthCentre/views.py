@@ -18,6 +18,7 @@ from django.db import connections
 from django.apps import apps
 import requests
 import zipfile
+from django.core.serializers import serialize
 
 if 'runserver' in sys.argv:
     from .Whatsapptestfile import whatsappApi, openWhatsapp, whatsappApiEdit, whatsappMedia, whatsappApiDoc
@@ -880,7 +881,7 @@ def doctorprofile(request):
                 # patient_id = request.POST['selectedPatient'] 
                 patientObj = Patient.objects.get(name=prescpatient)
                 prescriptiontext = "dummy"#request.POST['prescription']
-                prescription = Prescription(prescribingDoctor = prescdoctor, prescribingPatient = prescpatient ,doctor = doctor, patient= patient, symptoms = symptoms, prescriptionText = prescriptiontext, NoOfDays = NoOfDays) #medicine = medicine,
+                prescription = Prescription(prescribingDoctor = prescdoctor, prescribingPatient = prescpatient ,doctor = doctor, patient= patient, symptoms = symptoms, prescriptionText = prescriptiontext, medicine = medicine,NoOfDays = NoOfDays) 
                 prescription.save()
                 global getPrescriptionID 
                 getPrescriptionID = prescription.pk
@@ -894,6 +895,69 @@ def doctorprofile(request):
                 }
         response = render(request, "HealthCentre/prescriptionportal.html", context)
         return responseHeadersModifier(response)
+
+def createMedicine(request):
+    aaa = 0
+    bbb = 0
+    ccc = 0
+    
+    if request.session['writeNewPrescription']:
+        if request.method == "POST":
+        
+            medicine_name = request.POST['patientMedicine']
+            before_after_food = request.POST['patMedicine']
+        
+        
+        patient_medicine = Medicine(MedicineName=medicine_name, beforeAfter=before_after_food,Morning = aaa,Afternoon = bbb, Night = ccc)
+        
+        patient_medicine.save()
+
+
+        # context = {
+        # "patientMedicine" : medicine,
+        # "patMedicine" : before_after_food,
+        # }
+    response = HttpResponseRedirect(reverse('doctorprofile'))
+    # response = render(request, "HealthCentre/prescriptionportal.html", context)
+    return responseHeadersModifier(response)
+
+def createTimeline(request):
+    if request.method == 'GET':
+
+        if request.GET.get('SelectedPat') == None:
+                context = {
+                        "patients" : Patient.objects.all().order_by('id'),
+                        
+                        }
+                response = render(request, "HealthCentre/timeline.html", context)
+                return responseHeadersModifier(response)
+    if request.method == 'POST':
+            # PatientName = request.GET.get('SelectedPat', None)
+            PatientName = request.POST['selectedPatient']
+            try: 
+                selectedPatient = Patient.objects.get(name = PatientName)
+                selectedPatientID = selectedPatient.pk
+                try:
+                    appointmentData = Appointment.objects.filter(patientPres = selectedPatientID).order_by('date')
+                    serializedData = serialize('json', appointmentData) 
+                except Appointment.DoesNotExist:
+                    for singleappointmentData in appointmentData:
+                        singleappointmentData = None    
+                
+                    # prescriptionData = Prescription.objects.filter(patientPres = selectedPatientID).order_by('date')
+
+
+                context = {
+                    "patients" : Patient.objects.all().order_by('id'),
+                    "appointmentData" : appointmentData,
+                    # "prescriptionData" : prescriptionData,                    
+                }
+                response = render(request, "HealthCentre/timeline.html", context)
+                return responseHeadersModifier(response)
+                # return JsonResponse(data)
+            except Patient.DoesNotExist:
+                return JsonResponse({'error': 'Patient not found'}, status=404)
+     
 
 def deleteprescription(request, pk):
     # request.session['deleteAppointment'] = True
