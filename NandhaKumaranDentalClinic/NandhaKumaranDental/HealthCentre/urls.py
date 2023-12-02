@@ -27,7 +27,7 @@ urlpatterns = [
     path('generatePDF', views.generatePDF, name = "generatePDF"), 
     path('sendPdfinWhatsapp', views.sendPdfinWhatsapp, name = "sendPdfinWhatsapp"),
     path('dummy', views.dummy, name = "dummy"),
-    path('createNewMedicine', views.createNewMedicine, name = 'createNewMedicine')
+    path('createNewMedicine', views.createNewMedicine, name = 'createNewMedicine'),
     path('createTimeline', views.createTimeline, name='createTimeline'),
 
     # path('editAppointments', views.editAppointments, name = 'editAppointments')
