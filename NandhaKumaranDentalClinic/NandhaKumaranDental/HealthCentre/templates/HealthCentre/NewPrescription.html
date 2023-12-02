@@ -52,6 +52,12 @@ NDC-Prescription
       button.first{
         position: absolute;
       }
+      .hideout{
+        visibility : hidden;
+      }
+      .hidein{
+        visibility : none;
+      }
     </style>
     {% if request.session.isLoggedIn  %}
       {% if request.session.isDoctor %}
@@ -67,7 +73,22 @@ NDC-Prescription
     </li> 
     <!-- href="{% url 'generatePDF' %}" -->
   </div>
+  <br>
+          
+          <button class="hide" id="Addmed" align = "right" type ="button" >Add new medicine</button><button id="closeaddmed" type="button" class="hide"><strong>x</strong></button>
+        
         <!-- <button type="submit" name="writeNewPrescription" class="btn btn-warning btn-lg" action="{% url 'doctorprofile' %}">Write new prescription</button> -->
+        <form method = "post" id = "addnewmedicineform" action = "{% url 'createNewMedicine' %}">
+          {% csrf_token %}
+          <div id = "addnewmedicine" class = 'hideout'>
+          <input name="NewmedicineName" placeholder="Medicine Name"></input>
+          <select name="befAftFood" id ="befAftFood">
+            <option>Before</option>
+            <option>After</option>
+          </select>
+          <button id = "medsubmit" type="submit" class="btn btn-warning first">Add</button>
+        </div>
+        </form>
       <br>
       <li class="dropdown-divider" style="margin-left:25%;margin-right:25%;border-color:black"></li>
       <br>
@@ -160,8 +181,7 @@ NDC-Prescription
           <th>Afternoon</th>
           <th>Night</th>
           <th><button class="add-medicine hide" type="button" id="addMedicine"><strong>+</strong></button></th>
-          <!-- <th>No. of days</th> -->
-        </tr>
+         </tr>
         </thead>
         
           <tr class = "prescription-row">
@@ -178,7 +198,7 @@ NDC-Prescription
                     <option value="">Select Medicine</option>
               {% for prescMedicine in prescMedicines %}
                     
-                    <option value="{{ prescMedicine.MedicineName }}">{{ prescMedicine.MedicineName }}</option>
+                    <option value="{{ prescMedicine.medicinename }}">{{ prescMedicine.medicinename }}</option>
               {% endfor %}
               
             </select>  
@@ -207,7 +227,7 @@ NDC-Prescription
               <h6 name="night" id = "night" class="form-control">{{ night }}</h6>
             </td>
             <td>
-              <select name="SelectedSession" id="SelectedSession" class="form-control">
+              <select name="SelectedSession" id="SelectedSession" class="form-control hide">
                 <option value="">Select dosage</option>
           {% for prescTime in prescTimeOfDay %}
                 <option value="{{ prescTime.timeoftheday }}">{{ prescTime.timeoftheday }}</option>
@@ -268,6 +288,32 @@ NDC-Prescription
     </div>
       {% endif %}
       {% endif %}
+      
+      
+      <script>
+        //function addNewMedicine(){
+          var med = document.getElementById('addnewmedicine');
+          var Addmed = document.getElementById('Addmed');
+          console.log('log',  med.className);
+          Addmed.addEventListener("click", function () {
+          med.className = "hidein";
+          //if (med.className == "hidein"){
+          //  med.className = "hideout";
+          //};
+          });
+          //med.addEventListener("click", function () {
+          //  med.style.display = "block";
+          //});
+          var medsubmit = document.getElementById("medsubmit");
+          var closeaddmed = document.getElementById("closeaddmed");
+          medsubmit.addEventListener("click", function () {
+            med.className = "hideout";
+          });
+          closeaddmed.addEventListener("click", function () {
+            med.className = "hideout";
+          });
+        // };
+      </script>
       <script>
         
         function sleep(milliseconds) {
@@ -369,7 +415,7 @@ NDC-Prescription
             var newRow = prescriptiontable.querySelector(".prescription-row").cloneNode(true);
             var newElements = newRow.querySelectorAll('h6 , select');
             newElements.forEach(function(element) {
-              element.value = ''; 
+              element.value = '';
               //element.textContent = '';
             });
             // newRow.querySelector("#SelectedMedicine").value = "";
@@ -377,14 +423,8 @@ NDC-Prescription
             // newRow.querySelector("#morning").textContent = "";
             // newRow.querySelector("#afternoon").textContent = "";
             // newRow.querySelector("#night").textContent = "";
-            
-              const prescriptionsession = document.querySelector("select[name='SelectedSession']");
-              prescriptionsession.addEventListner('change', function(){
-                var SelectedSessionValue = prescriptionsession.value;
-                 fetch(``) 
-              })
-            
             prescriptiontable.appendChild(newRow);
+            
             var medicineSelect = newRow.querySelector('select[name="SelectedMedicine"]');
             medicineSelect.addEventListener('change', function(){
               var selectedMedicineValue = medicineSelect.value;
@@ -392,15 +432,27 @@ NDC-Prescription
               fetch(`addingMedicineData/${selectedMedicineValue}`)
               .then(response=> response.json())
               .then(data=> {
-              newRow.querySelector('h6[name = "morning"]').textContent = data.MedMorn
-              newRow.querySelector('h6[name = "afternoon"]').textContent = data.medAft
-              newRow.querySelector('h6[name = "night"]').textContent = data.medNight
+              //newRow.querySelector('h6[name = "morning"]').textContent = data.MedMorn
+              //newRow.querySelector('h6[name = "afternoon"]').textContent = data.medAft
+              //newRow.querySelector('h6[name = "night"]').textContent = data.medNight
               newRow.querySelector('h6[name = "beforeAfter"]').textContent = data.MedBefAft
             });
             });
+            var prescriptionsession = newRow.querySelector("select[name='SelectedSession']");
+          prescriptionsession.addEventListener('change', function(){
+          var SelectedSessionValue = prescriptionsession.value;
+          console.log("session log: ", SelectedSessionValue);
+           fetch(`addingSessionData/${SelectedSessionValue}`)
+           .then(response=> response.json())
+           .then(data=>{
+            newRow.querySelector('h6[name = "morning"]').textContent = data.MedMorn
+            newRow.querySelector('h6[name = "afternoon"]').textContent = data.medAft
+            newRow.querySelector('h6[name = "night"]').textContent = data.medNight    
+           }); 
+        });
           });
         });
-    
+        
     
     
     
@@ -463,9 +515,6 @@ NDC-Prescription
               dataType : 'json',
               success : function(data) {
                 $('#beforeAfter').html(data.MedBefAft);
-                $('#morning').html(data.MedMorn);
-                $('#afternoon').html(data.medAft);
-                $('#night').html(data.medNight);
                 //$('#medicine-data').html(
                   //    'BeforeAfter: ' +  data.MedBefAft +
                     //  '<br> Morning: ' + data.MedMorn +
@@ -484,11 +533,11 @@ NDC-Prescription
             var SessionSelected = $(this).val();
             $.ajax({
               method: 'GET',
+              csrfmiddlewaretoken: '{{ csrf_token }}',
               url : '{% url "doctorprofile" %}',
-              data : {'SelectedMed' : encodeURIComponent(SessionSelected)},
+              data : {'SelectedSess' : encodeURIComponent(SessionSelected)},
               dataType : 'json',
               success : function(data) {
-                $('#beforeAfter').html(data.MedBefAft);
                 $('#morning').html(data.MedMorn);
                 $('#afternoon').html(data.medAft);
                 $('#night').html(data.medNight);
