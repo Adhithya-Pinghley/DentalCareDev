@@ -60,7 +60,14 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'createTimeline' %}" style="color:black"> Timeline </a>
                     </li>
-
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'catchqrcode' %}" style="color:black"> QRCode </a>
+                    </li>
+                    <li class="nav-item">
+                        <label name = "wppStatus" id ="wppStatus">{{ request.session.numberNewPrescriptions }} </label>
+                    </li>
+                    
+                    
                     {% endif %}
                 {% else %}
                     <li class="nav-item">
@@ -82,7 +89,6 @@
                             <a class="nav-link" align = "right" style="color:black" href="{% url 'contactus' %}">Contact Us</a>
                         </li>
                         
-
                         {% if request.session.isLoggedIn %}
                             <div class="dropdown-divider"></div>
                             <li class = "nav-item">
@@ -91,7 +97,11 @@
                         {% endif %}
 
                     <!-- </div> -->
+                    
+                    <!-- <div id="qrcode-container"></div> -->
+
                 </li>
+                
 
                 <!-- <li class="nav-item">
                     <a class="nav-link" href="{% url 'onlineprescription' %}" style="color:black">Prescription</a>
@@ -125,4 +135,49 @@
             <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
             
         </body>
+        <script>
+        function generateQRCode() {
+        // Get the text or data you want to encode in the QR code
+        var data = document.getElementById("qrDataURL")
+
+        // Create a new QRious instance
+        var qr = new QRious({
+            element: document.getElementById("qrcode-container"),
+            value: data,
+             // Set the size of the QR code
+        });
+        generateQRCode().data
+
+        // You can also customize other properties of the QR code, such as color, background, etc.
+        // For example:
+        // qr.background = 'white';
+        // qr.foreground = 'black';
+
+        // Display the QR code
+        // document.getElementById("qrcode-container").style.display = "block";
+        //updateQRCodeImage(qr.toDataURL());
+
+    }
+    //function updateQRCodeImage(qrDataURL) {
+    // Make an Ajax request to update the QR code image
+    //var xhr = new XMLHttpRequest();
+    //xhr.open("GET", "/update_qrcode", true);  // Replace "/update_qrcode" with your actual server endpoint
+    //xhr.setRequestHeader("Content-Type", "application/json");
+
+    // Send the QR code data as JSON in the request body
+    //xhr.send(JSON.stringify({ qrCodeData: qrDataURL }));
+
+    // Handle the response (optional)
+    //xhr.onreadystatechange = function () {
+        //if (xhr.readyState === XMLHttpRequest.DONE) {
+            //if (xhr.status === 200) {
+                //console.log("QR code updated successfully!");
+            //} else {
+                //console.error("Error updating QR code:", xhr.status, xhr.statusText);
+            //}
+        //}
+    //};
+//}
+</script>
+
     </html>

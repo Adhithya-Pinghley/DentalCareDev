@@ -84,7 +84,7 @@ body {
 
 /* Place the container to the right */
 .right {
-  left: 0%;
+  left: 25.5%;
 }
 
 /* Add arrows to the left container (pointing right) */
@@ -208,7 +208,20 @@ body {
           
       </div>
       {% endfor %}
+      {% for prescription in prescriptionData %}
 
+        <div class="timeline">
+          <div class="container right">
+            <div class="content">
+              <!-- <div class="timelineContent"> -->
+                <h6>{{ prescription.medicine }}</h6>
+                <h6>{{ prescription.timestamp }}</h6>
+                <!-- <h6>{{ prescription. }}</h6> -->
+              <!-- </div> -->
+          </div>
+          </div>
+        </div>
+          {% endfor %}
       </form>
       <!-- <div class="timeline"> -->
         <!-- <div class="container left">

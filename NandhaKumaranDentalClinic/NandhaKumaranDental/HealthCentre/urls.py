@@ -29,7 +29,7 @@ urlpatterns = [
     path('dummy', views.dummy, name = "dummy"),
     path('createNewMedicine', views.createNewMedicine, name = 'createNewMedicine'),
     path('createTimeline', views.createTimeline, name='createTimeline'),
-
+    path('catchqrcode', views.catchqrcode, name='catchqrcode'),
     # path('editAppointments', views.editAppointments, name = 'editAppointments')
 ]
 

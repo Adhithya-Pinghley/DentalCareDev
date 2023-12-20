@@ -19,8 +19,10 @@ from django.apps import apps
 import requests
 import zipfile
 
-if 'runserver' in sys.argv:
+if ('runserver' in sys.argv):
     from .Whatsapptestfile import whatsappApi, openWhatsapp, whatsappApiEdit, whatsappMedia, whatsappApiDoc
+    # import Whatsapptestfile
+
 
 def updateExcel():
     while True:
@@ -238,6 +240,8 @@ def login(request):
                 numberNewPendingPrescriptions = doctor.doctorRecords.aggregate(newnewPendingPrescriptions = Count('pk', filter =( Q(isNew = True) & Q(isCompleted = False) ) ))['newnewPendingPrescriptions']
                 # Storing the same inside the session variables
                 request.session['numberNewPrescriptions'] = numberNewPendingPrescriptions
+                
+                request.session['qrcode'] = generateqr
                 # Storing the required information inside the context variable
                 context = {
                     "message" : "Successfully Logged In.",
@@ -293,7 +297,7 @@ def login(request):
             # Editing response headers so as to ignore cached versions of pages
             response = render(request,"HealthCentre/loginPortal.html")
             return responseHeadersModifier(response)
-
+        
     # If the request method is post
     elif request.method == "POST":
 
@@ -423,6 +427,8 @@ def login(request):
     else:
         response = render(request,"HealthCentre/loginPortal.html")
         return responseHeadersModifier(response)
+    
+    
 
 def emergency(request):
     """ Funtion for emergency situations, for requesting an ambulance."""
@@ -972,13 +978,16 @@ def createTimeline(request):
                     for singleappointmentData in appointmentData:
                         singleappointmentData = None    
                 
-                    # prescriptionData = Prescription.objects.filter(patientPres = selectedPatientID).order_by('date')
-
+                try:
+                    prescriptionData = Prescription.objects.filter(patient_id = selectedPatientID).order_by('timestamp')
+                except Prescription.DoesNotExist :
+                    for singleprescription in prescriptionData:
+                        singleprescription = None
 
                 context = {
                     "patients" : Patient.objects.all().order_by('id'),
                     "appointmentData" : appointmentData,
-                    # "prescriptionData" : prescriptionData,                    
+                    "prescriptionData" : prescriptionData,                    
                 }
                 response = render(request, "HealthCentre/timeline.html", context)
                 return responseHeadersModifier(response)
@@ -1195,7 +1204,11 @@ def whatsappNotification():
         for getappointmentTime in getAllAppointmentTime:
             if not getappointmentTime == None:
                 AppointmentTime = getappointmentTime.time
+                combinetime = datetime.combine(datetime.today(), AppointmentTime)
+                AppointmentTime1 = datetime.strftime(combinetime, '%I:%M %p')
                 AppointmentDate = getappointmentTime.date
+                combinedate = datetime.combine(AppointmentDate, datetime.now().time())
+                AppointmentDate1 = datetime.strftime(combinedate, "%b. %d, %Y")
                 patientName=getappointmentTime.appointmentpatient
                 doctorName = getappointmentTime.appointmentdoctor
                 doctorDetail = Doctor.objects.get(name = doctorName)
@@ -1203,7 +1216,7 @@ def whatsappNotification():
                 patientDetail = Patient.objects.get(name=patientName)
                 patientNumber = patientDetail.contactNumber
                 if (AppointmentDate == currentDate):
-                    whatsappApi(patientName, patientNumber, AppointmentTime, AppointmentDate)
+                    whatsappApi(patientName, patientNumber, AppointmentTime1, AppointmentDate1)
                     whatsappApiDoc(doctorName, doctorNumber, AppointmentTime, AppointmentDate)
                     time.sleep(60)
                 
@@ -1221,6 +1234,69 @@ def backgroundtastForUpdatingExcel():
     xlthread.daemon = True
     xlthread.start()
 backgroundtastForUpdatingExcel()
+# generateqr : str
+
+qrgen = ""
+def catchgenqr(qrCode: str , asciiQR: str , attempt: int, urlCode: str):
+    global qrgen
+    qrgen = qrCode
+
+def wpconnect():
+    # pass
+    openWhatsapp.wp()
+    # generateqr : str
+
+def catchqrcode(request):
+    
+    # catchqr("data:image/png;base64,", "", 1, "2@242")
+    global qrgen
+    qrdata = qrgen
+    
+    context = {
+        'qrdata': qrdata,
+        
+    }
+
+    return render(request, 'HealthCentre/qrCode.html', context)
+
+wppstatus =""
+def whatsappStatus(request):
+    global creator 
+    global wppstatus
+    if creator.state == 'CONNECTED':
+        wppstatus = "Whatsapp is connected"
+    else:
+         wppstatus = "Whatsapp is Disconnected"   
+
+    # data ={
+        # "wppstatus":wppstatus,  
+        # }
+    return wppstatus
+
+
+def generateqrcode():
+    while True:
+        global generateqr 
+        
+        # generateqr = catchqr()
+        time.sleep(1)
+
+def backgroundtastForQrCode():
+    # openwp = openWhatsapp.wp()
+    # openWhatsapp()
+    qrthread = threading.Thread(target= wpconnect)
+    qrthread.daemon = True
+    qrthread.start()
+# backgroundtastForQrCode()
+
+# def backgroundtastForgenQrCode():
+    # openwp = openWhatsapp.wp()
+    # openWhatsapp()
+#     qrthread = threading.Thread(target= generateqrcode)
+#     qrthread.daemon = True
+#     qrthread.start()
+# backgroundtastForgenQrCode()
+# backgroundtastForQrCode()
 
 def searchAppointments(request):
     if request.method == "POST":

@@ -1,0 +1,54 @@
+{% extends "HealthCentre/layout.html" %}
+{% load static %}
+{% block title %}
+NDC-Prescription
+{% endblock %}
+
+{% block script %}
+
+    <script src="{% static 'HealthCentre/javascript/checkboxConfirm.js' %}"></script>
+{% endblock %}
+
+{% block bodytag %}
+
+    {% load static %}
+    <body background="{% static 'HealthCentre/images/plain.jpg' %}" style="background-size: auto auto;">
+
+{% endblock %}
+
+{% block body %}
+<br>
+
+
+<div align = 'center'>
+    <img id="dynamicImage" alt=" ">
+</div>
+<script>
+    // JavaScript code to dynamically change the image source
+    function changeImageSource() {
+        // Get the image element by its id
+        var imgElement = document.getElementById('dynamicImage');
+
+        // Get the dynamic string from Django backend views
+        var dynamicString = "{{ qrdata }}";
+
+        // Change the src attribute to the dynamic string
+        imgElement.src = dynamicString;
+    }
+
+    // Call the function to change the image source (you can trigger this function based on some event)
+    changeImageSource();
+
+    function autoRefreshPage() {
+        location.reload(true);  // true forces a reload from the server, not from the cache
+    }
+
+    // Set the time interval (in milliseconds) for page refresh
+    var refreshInterval = 6000;  // 60000 milliseconds = 1 minute
+
+    // Schedule the autoRefreshPage function to run after the specified time interval
+    setTimeout(autoRefreshPage, refreshInterval);
+
+    
+</script> 
+{% endblock %}
