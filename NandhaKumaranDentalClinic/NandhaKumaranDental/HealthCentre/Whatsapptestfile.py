@@ -1,9 +1,7 @@
 from WPP_Whatsapp import Create
 # import psutil
+import threading
 
-
-    
-    
     # # for pc in psutil.process_iter():
     # #     try:
     # #         print(pc.cmdline())
@@ -33,15 +31,25 @@ from WPP_Whatsapp import Create
     # print(info)
 
 class openWhatsapp():
-    # start client with your session name
-    your_session_name = "test"
-    creator = Create(session=your_session_name)
-    client = creator.start()
-    # Now scan Whatsapp Qrcode in browser
+    # def wp():
+        # start client with your session name
+        your_session_name = "test"
+        creator = Create(session=your_session_name)
+        client = creator.start()
+        # Now scan Whatsapp Qrcode in browser
 
-    # check state of login
-    if creator.state != 'CONNECTED':
-        raise Exception(creator.state)
+        # check state of login
+        if creator.state != 'CONNECTED':
+            raise Exception(creator.state)
+
+# def wpthreadconnect():
+#     openWhatsapp.wp()
+
+# def qrThread():
+#     qrthread = threading.Thread(target = wpthreadconnect)
+#     qrthread.daemon = True
+#     qrthread.start()
+# qrThread()        
 
 def whatsappApi(patientName, whatsappNumber, time, date):
     # reclient= openWhatsapp.client

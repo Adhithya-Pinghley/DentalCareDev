@@ -18,9 +18,93 @@ from django.db import connections
 from django.apps import apps
 import requests
 import zipfile
+from WPP_Whatsapp import Create
+import WPP_Whatsapp
+# if 'runserver' in sys.argv:
+    # from .Whatsapptestfile import whatsappApi, openWhatsapp, whatsappApiEdit, whatsappMedia, whatsappApiDoc
 
-if 'runserver' in sys.argv:
-    from .Whatsapptestfile import whatsappApi, openWhatsapp, whatsappApiEdit, whatsappMedia, whatsappApiDoc
+# creator = ""
+# client = ""
+# class openWhatsapp():
+def wp():
+    # start client with your session name
+        your_session_name = "test"
+        global creator
+        creator = Create(session=your_session_name)
+        wpthreadconnect()
+        pathoftokens = "D:\\DentalCareDev\\tokens"
+        tokenPath=os.path.isdir(pathoftokens)
+        if tokenPath == True:
+            print ("folder already exists")
+        else :
+            # clientstart()
+            pass
+
+def clientstart():
+    global creator
+    global client
+    var = creator.statusFind(session ='test', status = 'phoneNotConnected')
+    client = creator.start()
+    
+    # Now scan Whatsapp Qrcode in browser
+
+    # check state of login
+        # if creator.state != 'CONNECTED':
+        #     raise Exception(creator.state)
+        # if __name__ == '__main__':
+            # wp()
+        # clientstart()
+        
+            
+
+def wpthreadconnect():
+    # wp()
+    if creator.state == 'CLOSED':
+
+        clientstart()
+    elif creator.state == 'CONNECTED':
+        pass
+    else:
+        wp()
+
+def qrThread():
+    qrthread = threading.Thread(target = wp)
+    qrthread.daemon = True
+    qrthread.start()
+qrThread()        
+
+
+
+def whatsappApi(patientName, whatsappNumber, time, date):
+    # reclient= openWhatsapp.client
+    phone_number = f"+91{whatsappNumber}" #phone_number = "+917904427507"  # or "+201016708170"
+    message = f"Dear, {patientName} This is Dr.Nanda's Dental Clinic. Your Appointment is fixed at {time} on {date}. Please do not forget your prescription!! Thansk!!"
+    # global client
+    # Simple message
+    result = client.sendText(phone_number, message)
+    
+def whatsappApiDoc(doctorName, whatsappNumber, time, date):
+    phone_number = f"+91{whatsappNumber}" #phone_number = "+917904427507"  # or "+201016708170"
+    message = f"Dear, {doctorName} This is Dr.Nanda's Dental Clinic. Your Appointment is fixed at {time} on {date}. Please do not forget your prescription!! Thansk!!"
+
+    # Simple message
+    result = client.sendText(phone_number, message)
+
+def whatsappApiEdit(patientName, whatsappNumber, time, date):
+    # reclient= openWhatsapp.client
+    phone_number = f"+91{whatsappNumber}" #phone_number = "+917904427507"  # or "+201016708170"
+    message = f"Dear, {patientName} This is Dr.Nanda's Dental Clinic. Your Appointment has been changed to {time} on {date}. Please do not forget your prescription!! Thansk!!"
+
+    # Simple message
+    result = client.sendText(phone_number, message)
+
+def whatsappMedia(whatsappNumber, pdfPathForWP):
+    phone_number = f"+91{whatsappNumber}"
+    path = pdfPathForWP
+    name = "dummy"
+    caption = "Dummy"
+    result = client.sendFile(phone_number, path, name, caption )
+    # message = openWhatsapp.client.sendMessageOptions()
 
 def updateExcel():
     while True:
@@ -221,7 +305,8 @@ def doctors(request):
 
 def login(request):
     """ Function for logging in the user. """
-
+    # wpthreadconnect()
+    wp()
     # Calling session variables checker
     request = requestSessionInitializedChecker(request)
 
@@ -1278,6 +1363,8 @@ def sendPdfinWhatsapp(wpnumber):
         latestPdf = max(pdfFullPaths, key=os.path.getmtime)
     
     whatsappMedia(wpnumber, latestPdf)
+
+    
 
 # def updateGoogleSheets():
 #     excelFilePath = 'D:\Dental-Software\database_tables.xlsx'
