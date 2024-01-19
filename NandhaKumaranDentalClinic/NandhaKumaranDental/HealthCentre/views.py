@@ -18,7 +18,8 @@ from django.db import connections
 from django.apps import apps
 import requests
 import zipfile
-
+from django.conf import Settings
+from WPP_Whatsapp import Create, PlaywrightSafeThread
 if ('runserver' in sys.argv):
     from .Whatsapptestfile import whatsappApi, openWhatsapp, whatsappApiEdit, whatsappMedia, whatsappApiDoc
     # import Whatsapptestfile
@@ -226,7 +227,7 @@ def login(request):
 
     # Calling session variables checker
     request = requestSessionInitializedChecker(request)
-
+    # openWhatsapp.wp()
     # If the request method is post
     if request.method == "GET":
         try:
@@ -240,15 +241,16 @@ def login(request):
                 numberNewPendingPrescriptions = doctor.doctorRecords.aggregate(newnewPendingPrescriptions = Count('pk', filter =( Q(isNew = True) & Q(isCompleted = False) ) ))['newnewPendingPrescriptions']
                 # Storing the same inside the session variables
                 request.session['numberNewPrescriptions'] = numberNewPendingPrescriptions
-                
-                request.session['qrcode'] = generateqr
+                doctorSpecific = Prescription.objects.filter(prescribingDoctor = request.session['Name'])
+                # request.session['qrcode'] = generateqr
                 # Storing the required information inside the context variable
                 context = {
                     "message" : "Successfully Logged In.",
                     "isAuthenticated" : True,
                     "user": records.order_by('-timestamp'),
                     "prescriptions" : Prescription.objects.all().order_by('timestamp'),
-                    "prescMedicine" : Medicine.objects.all().order_by('id')
+                    "prescMedicine" : Medicine.objects.all().order_by('id'),
+                    "prescriptionDoct" : doctorSpecific,
                 }
                 
                 # Editing response headers so as to ignore cached versions of pages
@@ -355,6 +357,7 @@ def login(request):
                 request.session['userEmail'] = doctor.emailHash
                 request.session['Name'] = doctor.name
 
+                
                 # Redirecting to avoid form resubmission
                 # Redirecting to home page
                 # Editing response headers so as to ignore cached versions of pages
@@ -517,6 +520,7 @@ def doctorappointmentsfalse(request):
             # request.session['CreatenewAppointment'] = False
             doctor = Doctor.objects.get(emailHash = request.session['userEmail'])
             records = doctor.doctorRecords.all()
+            doctorSpecific = Appointment.objects.filter(appointmentdoctor = request.session['Name'])
             # Getting the count of the new prescriptions pending
             numberNewPendingPrescriptions = doctor.doctorRecords.aggregate(newnewPendingPrescriptions = Count('pk', filter =( Q(isNew = True) & Q(isCompleted = False) ) ))['newnewPendingPrescriptions']
 
@@ -528,7 +532,8 @@ def doctorappointmentsfalse(request):
                 "message" : "Successfully Logged In.",
                 "isAuthenticated" : True,
                 "user": records.order_by('-timestamp'),
-                "Appointments" : Appointment.objects.all().order_by('-date')
+                # "Appointments" : Appointment.objects.all().order_by('-date')
+                "Appointments" : doctorSpecific
             }
             response = render(request,"HealthCentre/appointmentsPortal.html", context)
             return responseHeadersModifier(response)
@@ -624,7 +629,7 @@ def doctorappointments(request):
                 if existingAppointmentTime == datetimeObject and existingAppointmentDate == dateobject:
                     existingAppointmentStatus = "You already have another appointment at this time! Please set another time"
                     doctor = Doctor.objects.get(emailHash = request.session['userEmail'])
-                    records = doctor.doctorRecords.all() 
+                    records = doctor.doctorRecords.all()
                     context = {
                             "message" : "Successfully Logged In.",
                             "isAuthenticated" : True,
@@ -1161,6 +1166,9 @@ def requestSessionInitializedChecker(request):
         request.session['CreatenewAppointment'] = False
         request.session['goToAppointmentsPage'] = False
         request.session['appointmentEdit'] = False
+        request.session['patientMedEdit'] = False  
+        request.session['medicineEdit'] = False 
+        # request.session['patientMedicineEdit'] = False
         dummyBoolean = False
  
     # Returning request
@@ -1246,6 +1254,7 @@ def wpconnect():
     openWhatsapp.wp()
     # generateqr : str
 
+
 def catchqrcode(request):
     
     # catchqr("data:image/png;base64,", "", 1, "2@242")
@@ -1259,19 +1268,31 @@ def catchqrcode(request):
 
     return render(request, 'HealthCentre/qrCode.html', context)
 
-wppstatus =""
+# wppstatus =""
+# global creator
+ 
+# creator = ""
+# client =""
+def whatsappBrowser(request):
+    
+    backgroundtastForQrCode()
+    response = HttpResponseRedirect(reverse('login'))
+    return response
+
 def whatsappStatus(request):
-    global creator 
-    global wppstatus
+    creator = Settings.globalVar
     if creator.state == 'CONNECTED':
         wppstatus = "Whatsapp is connected"
+        request.session['wpStatus'] = True
+    
+    # elif creator.state == 'CONNECTED' and alreadyOpenStatus = 
     else:
-         wppstatus = "Whatsapp is Disconnected"   
+        wppstatus = "Whatsapp is Disconnected"  
+        request.session['wpStatus'] = False 
+    
+    data = {'wppStatus': wppstatus}
 
-    # data ={
-        # "wppstatus":wppstatus,  
-        # }
-    return wppstatus
+    return JsonResponse(data)
 
 
 def generateqrcode():
@@ -1287,50 +1308,63 @@ def backgroundtastForQrCode():
     qrthread = threading.Thread(target= wpconnect)
     qrthread.daemon = True
     qrthread.start()
-# backgroundtastForQrCode()
-
-# def backgroundtastForgenQrCode():
-    # openwp = openWhatsapp.wp()
-    # openWhatsapp()
-#     qrthread = threading.Thread(target= generateqrcode)
-#     qrthread.daemon = True
-#     qrthread.start()
-# backgroundtastForgenQrCode()
-# backgroundtastForQrCode()
+backgroundtastForQrCode()
 
 def searchAppointments(request):
-    if request.method == "POST":
-
-        searchQuery = request.POST["searchQuery"]
-
-        searchFilterAppointments = Appointment.objects.filter(Q(appointmentpatient__contains = searchQuery) |
-                                                            Q(appointmentdoctor__contains = searchQuery) |
-                                                            Q(notes__contains = searchQuery) |
-                                                            Q(date__contains = searchQuery) |
-                                                            Q(time__contains = searchQuery) |
-                                                            Q(subject__contains = searchQuery))
-        context = {
-            'searchAppointmentPatients' : searchFilterAppointments.order_by('appointmentpatient')
-        }
-
-        response = render(request, "HealthCentre/appointmentsPortal.html", context)
+    
+    if request.method == 'GET':
+        response = response = HttpResponseRedirect(reverse('doctorappointmentsfalse'))
         return responseHeadersModifier(response)
+    if request.method == "POST":
+        searchDate = request.POST["searchByDate"]
+        searchQuery = request.POST["searchQuery"]
+        if searchQuery != '':
+
+
+            searchFilterAppointments = Appointment.objects.filter(Q(appointmentpatient__icontains = searchQuery) |
+                                                                Q(appointmentdoctor__icontains = searchQuery) |
+                                                                Q(notes__icontains = searchQuery) |
+                                                                Q(time__icontains = searchQuery) |
+                                                                Q(subject__icontains = searchQuery))
+            context = {
+                'searchAppointmentPatients' : searchFilterAppointments.order_by('appointmentpatient')
+            }
+
+            response = render(request, "HealthCentre/appointmentsPortal.html", context)
+            return responseHeadersModifier(response)
+        if  searchDate != '':
+            searchFiterDate = Appointment.objects.filter(Q(date__icontains = searchDate))
+            context ={
+                'searchAppointmentPatients': searchFiterDate.order_by('appointmentpatient')
+            }
+            
+            response = render(request, "HealthCentre/appointmentsPortal.html", context)
+            return responseHeadersModifier(response)
+        else:
+            response = response = HttpResponseRedirect(reverse('doctorappointmentsfalse'))
+            return responseHeadersModifier(response)
     
 def searchPrescriptions(request):
-    if request.method == "POST":
-
-        searchQuery = request.POST["searchQuery"]
-
-        searchFilterPrescriptions = Prescription.objects.filter(Q(prescribingPatient__contains = searchQuery) | 
-                                                                Q(medicine__contains = searchQuery) |
-                                                                Q(timestamp__contains = searchQuery))
-
-        context = {
-            'searchPrescriptionPatients' : searchFilterPrescriptions.order_by('prescribingPatient')
-        }
-
-        response = render(request, "HealthCentre/prescriptionsPortal.html", context)
+    if request.method == 'GET':
+        response = response = HttpResponseRedirect(reverse('doctorprofile'))
         return responseHeadersModifier(response)
+    if request.method == "POST":
+        searchQuery = request.POST["searchQuery"]
+        if searchQuery != '':
+
+            searchFilterPrescriptions = Prescription.objects.filter(Q(prescribingPatient__icontains = searchQuery) | 
+                                                                    Q(medicine__icontains = searchQuery) |
+                                                                    Q(timestamp__icontains = searchQuery))
+
+            context = {
+                'searchPrescriptionPatients' : searchFilterPrescriptions.order_by('prescribingPatient')
+            }
+
+            response = render(request, "HealthCentre/prescriptionsPortal.html", context)
+            return responseHeadersModifier(response)
+        else:
+            response = response = HttpResponseRedirect(reverse('doctorprofile'))
+            return responseHeadersModifier(response)
 
 def generatePDF(request):
     if request.method == "GET":
@@ -1354,6 +1388,177 @@ def sendPdfinWhatsapp(wpnumber):
         latestPdf = max(pdfFullPaths, key=os.path.getmtime)
     
     whatsappMedia(wpnumber, latestPdf)
+
+def patMed(request):
+    request.session['patientMedEdit'] = False
+    if request.method == "GET":
+        request.session['patientMedicineEdit'] = False
+        # patient = Patient.objects.get(id)
+        context = {
+            "editPat" : Patient.objects.all().order_by('name'),
+            "editMedicine" : Medicine.objects.all().order_by('medicinename'),
+            }
+
+        response = render(request, "HealthCentre/medicinePatientPortal.html", context)
+        return responseHeadersModifier(response)
+
+def editPatientMed(request,pk):
+    request.session['patientMedEdit'] = True
+    if request.method == "POST": 
+        request.session['patientMedEdit'] = False  
+        patientObject = Patient.objects.get(id=pk)
+        patientObject.name = request.POST['userFirstNam']
+        patientObject.address = request.POST['userAddress']
+        patientObject.contactNumber = request.POST['userContactNo']
+        patientObject.email = request.POST['userEmail']
+        patientObject.rollNumber = request.POST['userRollNo']
+        patientObject.passwordHash = request.POST['userPassword']
+
+        patientObject.save()   
+        context = {
+               "editPat" : Patient.objects.all(),
+               "editMedicine" : Medicine.objects.all(),
+             }
+        response = HttpResponseRedirect(reverse('patMed'))
+        return responseHeadersModifier(response)
+
+    patientObj = Patient.objects.get(id=pk)
+    patientName = patientObj.name     
+    patientAddr = patientObj.address
+    patientContact = patientObj.contactNumber
+    patientEmail = patientObj.email
+    patientRoll = patientObj.rollNumber        
+    context= {
+        "userFirstNam" :patientName,
+        "userAddress" : patientAddr,
+        "userContactNo" : patientContact,
+        "userEmail" : patientEmail,
+        "userRollNo" : patientRoll,
+        "editPat" : Patient.objects.all(),
+        "editMedicine" : Medicine.objects.all(),
+
+    }
+    response = render(request, "HealthCentre/medicinePatientPortal.html", context)
+    return responseHeadersModifier(response)
+
+def deletepatientDetails(request, pk):
+    request.session['deletepatientDetails'] = True
+    delpatObj = Patient.objects.get(id=pk)
+    delpatObj.delete()
+    
+    context = {
+    
+    "delpatObj" : delpatObj,
+     "editPat" : Patient.objects.all(),
+    "editMedicine" : Medicine.objects.all(),
+        }
+    response = response = HttpResponseRedirect(reverse('patMed'))
+    return responseHeadersModifier(response)
+
+
+def medicineEdit(request,pk):
+    request.session['medicineEdit'] = True
+    if request.method == "POST": 
+        request.session['medicineEdit'] = False  
+        medicineObject = Medicine.objects.get(id=pk)
+        medicineObject.medicinename = request.POST['patientMed']
+        medicineObject.beforeafter = request.POST['beforeAfter']
+        
+
+        medicineObject.save()   
+        context = {
+                "editPat" : Patient.objects.all().order_by('name'),
+               "editMedicine" : Medicine.objects.all().order_by('name'),
+             }
+        response = HttpResponseRedirect(reverse('patMed'))
+        return responseHeadersModifier(response)
+
+    medicineObj = Medicine.objects.get(id=pk)
+    medicineName = medicineObj.medicinename    
+    befAftr = medicineObj.beforeafter
+          
+    context= {
+       "medicineName" : medicineName,
+       "befAftr" : befAftr,
+        "editPat" : Patient.objects.all(),
+        "editMedicine" : Medicine.objects.all(),
+
+    }
+    response = render(request, "HealthCentre/medicinePatientPortal.html", context)
+    return responseHeadersModifier(response)
+
+def deletemedicineDetails(request, pk):
+    request.session['deletemedicineDetails'] = True
+    delmedObj = Medicine.objects.get(id=pk)
+    delmedObj.delete()
+    
+    context = {
+    
+    "delmedObj" : delmedObj,
+     "editPat" : Patient.objects.all(),
+    "editMedicine" : Medicine.objects.all(),
+        }
+    response = response = HttpResponseRedirect(reverse('patMed'))
+    return responseHeadersModifier(response)
+
+def searchPatients(request):
+
+    if request.method == 'GET':
+        response = response = HttpResponseRedirect(reverse('patMed'))
+        return responseHeadersModifier(response)
+    if request.method == 'POST':
+        searchQuery = request.POST["searchQuery"]
+        if searchQuery != '':
+
+            searchFilterPatients = Patient.objects.filter(Q(name__icontains = searchQuery) |
+                                                                Q(address__icontains = searchQuery) |
+                                                                Q(contactNumber__icontains = searchQuery) |
+                                                                Q(email__icontains = searchQuery) |
+                                                                Q(rollNumber__icontains = searchQuery))
+            context = {
+                'editPat' : searchFilterPatients.order_by('name'),
+                "editMedicine" : Medicine.objects.all(),
+            }
+
+        
+            response = render(request, "HealthCentre/medicinePatientPortal.html", context)
+            return responseHeadersModifier(response)  
+        else:
+            response = response = HttpResponseRedirect(reverse('patMed'))
+            return responseHeadersModifier(response)
+
+
+    
+
+def searchMedicine(request):
+    if request.method == 'GET':
+        response = response = HttpResponseRedirect(reverse('patMed'))
+        return responseHeadersModifier(response)
+    if request.method == 'POST':
+        searchQuery = request.POST["searchQuery"]
+        if searchQuery != '':
+
+            searchFilterMedicine = Medicine.objects.filter(Q(medicinename__icontains = searchQuery) |
+                                                                Q(beforeafter__icontains = searchQuery))
+            context = {
+                'editMedicine' : searchFilterMedicine.order_by('medicinename'),
+                "editPat" : Patient.objects.all(),
+            }
+
+            response = render(request, "HealthCentre/medicinePatientPortal.html", context)
+            return responseHeadersModifier(response)
+        else:
+            response = response = HttpResponseRedirect(reverse('patMed'))
+            return responseHeadersModifier(response)        
+    
+
+
+
+
+
+
+
+
 
 # def updateGoogleSheets():
 #     excelFilePath = 'D:\Dental-Software\database_tables.xlsx'

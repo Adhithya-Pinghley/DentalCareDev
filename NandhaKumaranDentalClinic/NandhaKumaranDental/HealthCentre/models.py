@@ -23,7 +23,7 @@ class Patient(models.Model):
     address = models.CharField(max_length = 100)
     contactNumber = models.CharField(max_length = 10, db_column = 'contactnumber')
     email = models.EmailField(max_length = 255, null= True, blank= True)
-    rollNumber = models.CharField(max_length = 8, db_column = 'rollnumber')
+    rollNumber = models.CharField(max_length = 8, db_column = 'rollnumber') 
     passwordHash = models.CharField(max_length = 64, db_column = 'passwordhash')
     emailHash = models.CharField(max_length = 64, db_column = 'emailhash')
 

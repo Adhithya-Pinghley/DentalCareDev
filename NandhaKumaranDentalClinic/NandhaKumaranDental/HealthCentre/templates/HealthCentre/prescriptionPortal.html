@@ -73,6 +73,7 @@ NDC-Prescription
       <div class="form-group">
         <input name = "searchQuery" class="form-group" type="search" placeholder="Search Prescriptions" aria-label="Search">
         <button class="form-group" type="submit">Search</button>
+        <input type="date">
         <!-- btn btn-outline-success my-2 my-sm-0 -->
       </div>
     </form>
@@ -92,7 +93,7 @@ NDC-Prescription
                 <!-- <div id="prescription-details-{{ prescription.id }}" class="prescription-details"></div>   -->
               <td>{{ prescription.prescribingPatient }}</td>
               <td>{{ prescription.symptoms }}</td>
-              <td><a class="button" href ="{% url 'deleteprescription' prescription.id %}">Delete</a></td>
+              <td><a class="button" href ="{% url 'deleteprescription' prescription.id %}">Use Me</a></td>
             </tr>
             <tr class="prescription-details">
                 <td>Doctor Name : {{ prescription.prescribingDoctor }} </td>

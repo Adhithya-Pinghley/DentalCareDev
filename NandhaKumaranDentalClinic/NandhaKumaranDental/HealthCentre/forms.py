@@ -1,5 +1,5 @@
 from django.forms import ModelForm
-from .models import Appointment
+from .models import Appointment, Medicine, Patient
 from django import forms
 from .widgets import DatePickerInput, TimePickerInput, DateTimePickerInput
 
@@ -24,6 +24,16 @@ class AppointmentForm(ModelForm):
     class Meta:
         model = Appointment
         fields = "__all__"
+
+class PatientMedicineForm(ModelForm):
+    class Meta:
+        model = Medicine
+        model = Patient
+        
+        fields = ['medicinename' , 'beforeafter']
+        fields = ['name' , 'address' , 'contactNumber' , 'email' , 'rollNumber' , 'passwordHash']
+
+
 # class TimeInput(forms.TimeInput, forms.DateInput):
 #     timeInputType = 'time'
 #     dateinputType = 'date'

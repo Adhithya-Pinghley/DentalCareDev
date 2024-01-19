@@ -198,7 +198,9 @@ NDC-Prescription
                     <option value="">Select Medicine</option>
               {% for prescMedicine in prescMedicines %}
                     
-                    <option value="{{ prescMedicine.medicinename }}">{{ prescMedicine.medicinename }}</option>
+                    <option value="{{ prescMedicine.medicinename }}" >{{ prescMedicine.medicinename }}</option>
+                    <a class="button" href ="{% url 'editAppointments' 1   %}">Edit</a>
+                      
               {% endfor %}
               
             </select>  
@@ -292,8 +294,8 @@ NDC-Prescription
       
       <script>
         //function addNewMedicine(){
-          var med = document.getElementById('addnewmedicine');
-          var Addmed = document.getElementById('Addmed');
+          var med = document.getElementById('addnewmedicine'); // TextBox for Medicine Name And Bef Afr Food
+          var Addmed = document.getElementById('Addmed'); // Add New Medicine
           console.log('log',  med.className);
           Addmed.addEventListener("click", function () {
           med.className = "hidein";

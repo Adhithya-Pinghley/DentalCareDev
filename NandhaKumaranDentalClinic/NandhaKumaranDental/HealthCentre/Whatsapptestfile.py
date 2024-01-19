@@ -1,5 +1,5 @@
-from WPP_Whatsapp import Create
-
+from WPP_Whatsapp import Create, PlaywrightSafeThread
+from django.conf import Settings
 # if __name__ == '__main__':
     # from .views import catchgenqr
 # import psutil
@@ -28,18 +28,19 @@ def catchqr(qrCode: str , asciiQR: str , attempt: int, urlCode: str):
             # print(attempt)
             # print(urlCode)
 
-# creator = ""
-# client = ""
+creator = ""
+client = ""
 
 class openWhatsapp():
         # start client with your session name
      
     def wp():
-        # from .views import catchgenqr
+        from .views import catchgenqr
         your_session_name = "test"
-        # global creator
-        creator = Create(session=your_session_name, catchQR= catchqr , logQR= True) #catchgenqr
-        # global client
+        global creator
+        creator = Create(session=your_session_name, catchQR= catchgenqr , logQR= True) #catchgenqr
+        Settings.globalVar = creator
+        global client
         client = creator.start()
         
     # Now scan Whatsapp Qrcode in browser

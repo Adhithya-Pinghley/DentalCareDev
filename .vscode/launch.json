@@ -19,7 +19,7 @@
             "django": true,
             //"host": "localhost",
             //"port": 9000,
-            "justMyCode": false
+            "justMyCode": true
         }
     ]
 }

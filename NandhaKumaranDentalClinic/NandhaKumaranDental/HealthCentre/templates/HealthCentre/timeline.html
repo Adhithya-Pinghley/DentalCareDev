@@ -167,6 +167,8 @@ body {
 </style>
 
 <!-- <h3 align = "center">Appointment time</h3> -->
+  <h3 align = "center"> Timeline </h3>
+  <li class="dropdown-divider" style="margin-left:25%;margin-right:25%;border-color:black"></li>
 
     <form method="post" action="{% url 'createTimeline' %}">
         {% csrf_token %}
@@ -190,9 +192,6 @@ body {
                     
         
         <br>
-        <br>
-      <li class="dropdown-divider" style="margin-left:25%;margin-right:25%;border-color:black"></li>
-      <br>
       {% for appointment in appointmentData %}
         <div class="timeline">
           
@@ -223,6 +222,7 @@ body {
         </div>
           {% endfor %}
       </form>
+      
       <!-- <div class="timeline"> -->
         <!-- <div class="container left">
           <div class="content">

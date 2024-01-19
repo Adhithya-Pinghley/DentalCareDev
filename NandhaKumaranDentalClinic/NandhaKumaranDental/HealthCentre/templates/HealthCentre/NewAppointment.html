@@ -17,7 +17,15 @@ NDC-Prescription
 
 
 {% block body %}
+<h4 align = 'center'>Patient's Appointment</h4>
+<li class="dropdown-divider" style="margin-left:25%;margin-right:25%;border-color:black"></li>
+<style>
+  .dropdown {
+    overflow-y: scroll; 
+    max-height: 150px;
+  }
 
+</style>
 {% if request.session.isLoggedIn  %}
       {% if request.session.isDoctor %}
       <!-- <form align="left" action="{% url 'doctorprofile' %}" method="post" style="margin-right:5%"> -->
@@ -25,28 +33,29 @@ NDC-Prescription
        <li class = "button">
             <a class="button" align = "right" type ="submit" style="color:rgb(30, 126, 216)" href="{% url 'doctorappointments' %}">Create new appointment</a>
        </li> 
-        <!-- <button type="submit" name="writeNewPrescription" class="btn btn-warning btn-lg" action="{% url 'doctorprofile' %}">Write new prescription</button> -->
       
       <br>
       {% endif %}
       {% endif %}
       {% if existingAppointmentStatus %}
+    
     <div style="text-align:center;margin:0 auto;"class="alert alert-danger" role="alert" >
         {{ existingAppointmentStatus }}
     </div>
+  
 {% endif %}
       {% if not request.session.appointmentEdit %}
-      
+      <div class="jumbotron jumbotron-fluid" style = "margin:5%;padding:5%;margin-left: 30%;margin-right: 30%; background-color: rgba(30, 32, 45, 0.225);padding-top:2%;padding-bottom:2%" align ="center" width="300px">    
       <form action="{% url 'doctorappointments' %}" method="post" align="center">
         {% csrf_token %}
 
         <div class="form-group" >
 
-            <label  style="color:white">Please select a patient: </label>
-            <select name="selectedPatient" class="form-control" placeholder="Select Patient">
+            <label  style="color:black">Please select a patient: </label>
+            <select name="selectedPatient" class="dropdown" placeholder="Select Patient">
               <option value = "">select patient</option>
                 {% for patient in patients %}
-                    <option value="{{ patient.name }}">{{ patient.name }}</option>
+                    <option value="{{ patient.name }}" >{{ patient.name }}</option>
                 {% endfor %}
                 {% for prescription in prescPatients %}
                 <option value="{{ prescription.prescribingPatient }}">{{ prescription.prescribingPatient }}</option>
@@ -54,17 +63,17 @@ NDC-Prescription
             </select>
             <br>
             <li class = "button">
-              <a class="button" align = "right" type ="submit" style="color:rgb(30, 126, 216)" href="{% url 'register' %}">Add new patient</a>
-         </li>
+              <a class="button" align = "right" type ="submit" style="color:rgb(3, 0, 15)" href="{% url 'register' %}">Add new patient</a>
+          </li>
          <br>
         </div>
-        <!-- <label  style="color:white">Enter patient name</label>
-          <div class="col-6 ">
-                <input name="PatientNameForAppointment"type="text" class="form-control" placeholder="Enter Patient Name">
-          </div> -->
-        <br>
     <div class = "form-group">
       
+      <input id ="searchByDate" name="currentDateTime" type="date">
+      <input id ="searchByTime" name="searchByTime" type ="time">
+      
+      <br>
+
       <label for="EnterTimeHour" style="color:rgb(3, 3, 3)">  Time(HH:MM)-</label>
       <select name="EnterTimeHour" id="EnterTimeHour" class = "form-group">
         {% for hour in hours %}
@@ -112,6 +121,7 @@ NDC-Prescription
             <input type="submit" value="Submit">
             
           </form>
+      </div>
           {% endif %}
           <br>
           {% if request.session.appointmentEdit %}

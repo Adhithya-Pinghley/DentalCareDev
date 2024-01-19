@@ -28,11 +28,19 @@
         <body background="{% static 'HealthCentre/images/plain.jpg' %}" style="background-size: auto auto;">
     {% endblock %}
 
-
-
+    <style>
+    .hideout{
+        visibility : hidden;
+      }
+    .hidein{
+        visibility : none;
+      }
+    </style>
+    
+    
     <nav class="navbar navbar-expand-lg navbar-light bg-transparent" >
         {% if request.session.isLoggedIn %}
-            <a class="navbar-brand" href="/"><h3 style="color:black;text-align:center">Hi,{% if request.session.isDoctor %} Dr.{% endif %} {{ request.session.Name }}</h3></a>
+            <a class="navbar-brand" href="/"><h3 style="color:black;text-align:center">Dr. {{ request.session.Name }}</h3></a>
         {% else %}
             <a class="navbar-brand" href="/"><h2 style="color:black;text-align:center">Dr. Nandakumaran Dental CLinic</h2></a>
         {% endif %}
@@ -64,9 +72,8 @@
                         <a class="nav-link" href="{% url 'catchqrcode' %}" style="color:black"> QRCode </a>
                     </li>
                     <li class="nav-item">
-                        <label name = "wppStatus" id ="wppStatus">{{ request.session.numberNewPrescriptions }} </label>
+                        <a class="nav-link" href="{% url 'patMed' %}" style="color:black"> Edit Patient Medicine </a>
                     </li>
-                    
                     
                     {% endif %}
                 {% else %}
@@ -75,15 +82,7 @@
                       </li>
                 {% endif %}
 
-                <!-- <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" style="color:black" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      Options
-                    </a> -->
-                    <!-- <div class="dropdown-menu" aria-labelledby="navbarDropdown"> -->
-
-                        <!-- <a class="dropdown-item" href="{% url 'MedicalStore:index' %}">Medicine Store</a>
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="{% url 'doctors' %}">Doctors</a> -->
+               
                         <div class="dropdown-divider"></div>
                         <li class = "nav-item">
                             <a class="nav-link" align = "right" style="color:black" href="{% url 'contactus' %}">Contact Us</a>
@@ -94,30 +93,21 @@
                             <li class = "nav-item">
                                 <a class="nav-link" style="color:black" href="{% url 'logout' %}">Logout</a>
                             </li>
+                            <br>
+                            <li class="nav-item">
+                                <h6 class ="nav-link" name = "wppStatus" id ="wppStatus" style="color:black"> {{ wppStatus }} </h6>
+                                </li>
+                                <br>
+                                <li class="nav-item hidein" id="whatsappUnhide" >
+                                    <a class="nav-link"  href="{% url 'whatsappBrowser' %}" style="color:black"> Connect Whatsapp </a>
+                                </li>
+                           
                         {% endif %}
+                        
 
-                    <!-- </div> -->
-                    
-                    <!-- <div id="qrcode-container"></div> -->
-
-                </li>
-                
-
-                <!-- <li class="nav-item">
-                    <a class="nav-link" href="{% url 'onlineprescription' %}" style="color:black">Prescription</a>
-                </li> -->
-
-                <!-- <li class="nav-item">
-                    <a class="nav-link" href="{% url 'emergency' %}" style="color:black"><span style="background-color:red" class="badge badge-secondary">EMERGENCY</span></a>
-                </li> -->
+                    <br>
 
             </ul>
-
-            <!-- <form class="form-inline my-2 my-lg-0" method="post" action="{% url 'MedicalStore:search' %}">
-              {% csrf_token %}
-                <input name = "searchQuery" class="form-control mr-sm-2" type="search" placeholder="Search Medicine" aria-label="Search">
-                <button class="btn btn-outline-success my-1 my-sm-0" type="submit">Search</button>
-            </form> -->
 
         </div>
     </nav>
@@ -136,48 +126,61 @@
             
         </body>
         <script>
-        function generateQRCode() {
-        // Get the text or data you want to encode in the QR code
-        var data = document.getElementById("qrDataURL")
+            var testData
+            
+            // document.addEventListener("DOMContentLoaded", function () {
+    function updatewhatsappStatus() {
+    $.ajax({
+      url: "{% url 'whatsappStatus' %}",
+      method: 'GET',
+      dataType : 'json',
+    //   data :  {'wppStatus': wppstatus},
+      success: function(data) {
+        $('#wppStatus').text(data.wppStatus);
+        testData = data.wppStatus;
+        
+        var element1 = document.getElementById('whatsappUnhide');
+        var element2 = testData;
 
-        // Create a new QRious instance
-        var qr = new QRious({
-            element: document.getElementById("qrcode-container"),
-            value: data,
-             // Set the size of the QR code
-        });
-        generateQRCode().data
-
-        // You can also customize other properties of the QR code, such as color, background, etc.
-        // For example:
-        // qr.background = 'white';
-        // qr.foreground = 'black';
-
-        // Display the QR code
-        // document.getElementById("qrcode-container").style.display = "block";
-        //updateQRCodeImage(qr.toDataURL());
-
-    }
-    //function updateQRCodeImage(qrDataURL) {
-    // Make an Ajax request to update the QR code image
-    //var xhr = new XMLHttpRequest();
-    //xhr.open("GET", "/update_qrcode", true);  // Replace "/update_qrcode" with your actual server endpoint
-    //xhr.setRequestHeader("Content-Type", "application/json");
-
-    // Send the QR code data as JSON in the request body
-    //xhr.send(JSON.stringify({ qrCodeData: qrDataURL }));
-
-    // Handle the response (optional)
-    //xhr.onreadystatechange = function () {
-        //if (xhr.readyState === XMLHttpRequest.DONE) {
-            //if (xhr.status === 200) {
-                //console.log("QR code updated successfully!");
-            //} else {
-                //console.error("Error updating QR code:", xhr.status, xhr.statusText);
-            //}
-        //}
-    //};
-//}
+        console.log('wp stat:',testData);
+        
+        if(element2) {
+            if (element2 == "Whatsapp is connected") {
+                
+                element1.className = "hideout";
+            } else {
+                element1.className = "hidein";
+            }
+        }
+        console.log('classname stat', element1.className);
+      },
+      error: function(error) {
+        console.error('Error fetching WhatsApp status:', error);
+    
+      }
+      
+    });
+}
+// });
+  document.addEventListener("DOMContentLoaded", function () {
+    // $(document).ready(function() {
+        // updatewhatsappStatus();
+        setInterval(updatewhatsappStatus, 1000);
+        
+  });
+  document.addEventListener("DOMContentLoaded", function () {
+    function whatsapphide(element2) {
+    var element2 = document.getElementById('whatsappUnhide');
+    console.log('log',val1)
+    if (element2 == "Whatsapp is connected") {
+                
+        element2.className = "hideout";
+            } else {
+                element2.className = "hidein";
+            }
+        }
+  });
+    
 </script>
 
     </html>

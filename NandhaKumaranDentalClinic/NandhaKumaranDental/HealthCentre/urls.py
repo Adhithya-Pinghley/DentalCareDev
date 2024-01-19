@@ -30,7 +30,15 @@ urlpatterns = [
     path('createNewMedicine', views.createNewMedicine, name = 'createNewMedicine'),
     path('createTimeline', views.createTimeline, name='createTimeline'),
     path('catchqrcode', views.catchqrcode, name='catchqrcode'),
-    # path('editAppointments', views.editAppointments, name = 'editAppointments')
+    path('whatsappStatus', views.whatsappStatus, name='whatsappStatus'),
+    path('whatsappBrowser', views.whatsappBrowser, name = 'whatsappBrowser'),
+    path('patMed', views.patMed, name = 'patMed'),
+    path('editPatientMed/<pk>', views.editPatientMed, name = 'editPatientMed'),
+    path('medicineEdit/<pk>', views.medicineEdit, name = 'medicineEdit'),
+    path('deletepatientDetails/<pk>', views.deletepatientDetails, name = 'deletepatientDetails'),
+    path('deletemedicineDetails/<pk>', views.deletemedicineDetails, name = 'deletemedicineDetails'),
+    path('searchPatients', views.searchPatients, name = 'searchPatients'),
+    path('searchMedicine', views.searchMedicine, name = 'searchMedicine'),
 ]
 
 # from django.urls import path

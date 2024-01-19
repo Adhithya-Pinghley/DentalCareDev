@@ -1,0 +1,378 @@
+{% extends "HealthCentre/layout.html" %}
+{% load static %}
+{% block title %}
+NDC-Prescription
+{% endblock%}
+
+{% block script %}
+    <script src="{% static 'HealthCentre/javascript/checkboxConfirm.js' %}"></script>
+{% endblock %}
+
+{% block bodytag %}
+
+    {% load static %}
+    <body background="{% static 'HealthCentre/images/plain.jpg' %}" style="background-size: auto auto;">
+
+{% endblock %}
+
+
+{% block body %}
+
+    <br>
+    
+    <h4 align = "center"> Medicine Patient Portal </h4>
+
+    <li class="dropdown-divider" style="margin-left:25%;margin-right:25%;border-color:black"></li>
+    
+    <li class = "button">
+      <a class="button" align = "right" type ="submit" style="color:rgb(13, 186, 249)" href="{% url 'register' %}">Add new patient</a>
+    </li> 
+    <br>
+
+    <button class="hide" id="Addmed" align = "right" type ="button" >Add new medicine</button><button id="closeaddmed" type="button" class="hide"><strong>x</strong></button>
+
+    <br>
+    <form method = "post" id = "addnewmedicineform" action = "{% url 'createNewMedicine' %}">
+      {% csrf_token %}
+      <div id = "addnewmedicine" class = 'hideout'>
+      <input name="NewmedicineName" placeholder="Medicine Name"></input>
+      <select name="befAftFood" id ="befAftFood">
+        <option>Before</option>
+        <option>After</option>
+      </select>
+      <button id = "medsubmit" type="submit" class="btn btn-warning first">Add</button>
+    </div>
+    </form>
+
+    <br>
+
+    <style>
+      body{
+        background-color: grey; /* Replace with your desired color code */
+      }
+        .prescription-table {
+          display: flex;
+          position:static;
+          width: 10%;
+          float: left;
+          overflow-y: scroll;
+          height: 500px; /* Adjust the height as needed */
+          border: 1px solid #ccc;
+          margin-right: 10px;
+
+        }
+
+
+        .prescription-table table{
+          border-collapse: collapse;
+          width: 100%;
+          
+        }
+        /* .height {
+          height: 500%;
+          margin-bottom: -500px;
+        } */
+        .floatLeft {
+            width: 50%;
+            float :left;
+        }
+
+        .floatRight{
+            width: 48.9%;
+            float :right;
+        }
+        .prescription-table th,
+        .prescription-table td {
+          border:1px solid  #ddd;
+          padding: 8px;
+          text-align: left;
+          
+          /* border-bottom: 1px solid #ddd; */
+        }
+      
+        .prescription-table th {
+          background-color: #f2f2f2;
+        }
+      
+        .prescription-table tr:hover {
+          background-color: #f5f5f5;
+        }
+
+        .prescription-details {
+          display: none;
+          background-color: #f5f5f5;
+          padding: 10px;
+        }
+      .overlay{
+      z-index: 700px;
+      position: absolute;
+      top:-50%;
+      left:-30%;
+      margin: 700px;
+      background: #e1e3e1; 
+}
+      .medicinelay{
+      z-index: 700px;
+      position: absolute;
+      top:-50%;
+      right:-30%;
+      margin: 700px;
+      background: #e1e3e1; 
+
+        }
+      .emojilay{
+      z-index: 700px;
+      position: absolute;
+      top:-50%;
+      right:-30%;
+      margin: 700px;
+      background: #e1e3e1; 
+      }  
+      
+      .hidein{
+        visibility: none;
+      }
+      .hideout{
+      visibility: hidden;
+      }  
+    </style>
+    
+    <div class = "hideout emojilay " id="emojiContainer" >
+        <img src = "{% static 'HealthCentre\images\UseMeEmoji.gif' %}">
+    </div>
+
+      <div class="form-inline" >
+        <form method="post" action="{% url 'searchPatients' %}">
+          {% csrf_token %}
+          <div class = "form-group">
+            <input name = "searchQuery" class="form-group" type="search" placeholder="Search Patients" aria-label="Search">
+            <button class="form-group" type="submit">Search</button>
+          </div>
+        </form>
+        <form style = "position: absolute; right: 3%;" method="post" action="{% url 'searchMedicine' %}">
+          {% csrf_token %}
+          <div class="form-group">
+            <input name = "searchQuery" class="form-group" type="search" placeholder="Search Medicine" aria-label="Search">
+            <button class="form-group" type="submit">Search</button>
+          </div>
+          
+        </form>
+      </div>
+    <div class = "prescription-table floatLeft">
+    <table>
+        <thead>
+          <tr>
+            <th>Patient Name</th>
+            <th>Address</th>
+            <th>Age</th>
+            </tr>
+        </thead>
+        <tbody>
+          {% for patient in editPat %}    
+            <tr class="prescription-row">
+                
+              <td>{{ patient.name }} </td>
+              <td>{{ patient.address }} </td>
+              <td>{{ patient.rollNumber }} </td>
+              
+              <td><a class="button" id = "editButtn" href ="{% url 'editPatientMed' patient.id %}">Edit</a></td>
+              <td><a class="button delete-link" id="useMeEmoji" href ="{% url 'deletepatientDetails' patient.id %}">Use Me</a></td>
+              
+              
+              
+            </tr>
+            <tr class="prescription-details">
+              
+              <td> Gender: {{ patient.passwordHash }} </td>
+              <td> Phone Number: {{ patient.contactNumber }} </td>
+              <td> Email ID: {{ patient.email }} </td>
+              
+              
+            </tr>
+
+          {% endfor %}
+          
+        </tbody>
+         
+      </table>
+    </div>
+    
+    <div class = "prescription-table floatRight height">
+      <table>
+        <thead>
+          <tr>
+            <th>Medicine Name</th>
+            <th>Before After</th>            
+          </tr>
+        </thead>
+               
+        <tbody>
+          {% for medicine in editMedicine %}    
+            <tr class="prescription-r">
+                
+              <td>{{ medicine.medicinename }}</td>
+              <td>{{ medicine.beforeafter }}</td>
+              <td><a class="button" href="{% url 'medicineEdit' medicine.id %}">Edit</a></td>
+              <td><a class="button delete-link" id="useMeEmoji1" href="{% url 'deletemedicineDetails' medicine.id %}">Use Me</a></td>
+              
+            </tr>
+
+            {% endfor %}
+          
+        </tbody>
+      </table>
+    </div>
+  
+      {% if request.session.patientMedEdit %}
+      
+        <div id ="editElement">
+          <div class="jumbotron jumbotron-fluid overlay " ><button id="closeaddmed" type="button" class="hide"><strong>x</strong></button>
+          <h1 style="text-align:center;color:rgb(3, 3, 3)" class = "display-5">Edit Patient Details</h1>
+          <li class="dropdown-divider" style="border-color:rgb(0, 0, 0)"></li>
+          
+
+            <form method="post">
+            {% csrf_token %}
+        
+      
+            <div class="form-row ">
+
+              <div class="col-6 ">
+                  <input name="userFirstNam"type="text" class="form-control" placeholder="Patient name" value="{{ userFirstNam }}">
+              </div>
+              <div class="col-6">
+                <input name="userContactNo" type="number" class="form-control" placeholder="Contact Number" value="{{ userContactNo }}">
+            </div>
+        </div>
+
+        <br>
+        
+        <div class="form-row">
+
+              <div class="col-6">
+                  <input name="userEmail" type="email" class="form-control" placeholder="Email Address" value="{{ userEmail }}">
+              </div>
+          
+              <div class="col-6">
+          
+                  <input name="userRollNo" type="text" id="userRollNo" class="form-control" placeholder="Patient Age" value="{{ userRollNo }}">
+          
+              </div>   
+        </div>
+
+          <br>
+          
+
+        <div class="form-row">
+
+              <div class="col-6">
+                  <input name="userAddress" type="text" class="form-control" placeholder="Address" value="{{ userAddress }}">
+              </div>
+              <div class="col-6">
+                <input name="userPassword" class="form-control" placeholder="Sex">
+            </div>
+             
+
+        </div>
+
+        <br>
+
+        <div class="form-row">
+
+              
+          {% if userType == 'doctor' %}
+              <div class="col-6">
+                  <input name="userConfirmPassword" type="password" class="form-control" placeholder="Confirm Password">
+              </div>
+          {% endif %}
+            
+        </div>      
+
+      <button type="submit" class="btn btn-warning " id ="patSubmit" >Submit</button>   
+      </form>
+      
+    </div>
+    </div>
+    {% endif %}  
+    {% if request.session.medicineEdit %}
+        <div id ="medicineEdit">
+          <div class="jumbotron jumbotron-fluid medicinelay " ><button id="closemed" type="button" class="hide"><strong>x</strong></button>
+          <h1 style="text-align:center;color:rgb(3, 3, 3)" class = "display-5"> Medicine Details</h1>
+          <li class="dropdown-divider" style="border-color:rgb(0, 0, 0)"></li>
+          
+
+            <form method="post">
+            {% csrf_token %}
+        
+      
+            <div class="form-row ">
+
+              <div class="col-6 ">
+                  <input name="patientMed"type="text" class="form-control" placeholder="Patient Medicine" value="{{ medicineName }}">
+              </div>
+              <div class="col-6">
+                <input name="beforeAfter" type="text" class="form-control" placeholder="Before After" value="{{ befAftr }}">
+              </div>
+            </div>
+
+        <br>
+            <button type="submit" class="btn btn-warning " id ="patSubmit" >Submit</button>   
+            
+      </form>
+      
+    </div>
+    </div>
+    
+    {% endif %}  
+   
+ <script>
+
+const rows = document.querySelectorAll('.prescription-row');
+rows.forEach(row => {
+          row.addEventListener('click', function() {
+            const detailsRow = row.nextElementSibling;
+            detailsRow.style.display = detailsRow.style.display === 'none' ? 'table-row' : 'none';
+
+          })
+        })
+
+
+var emojiImg = document.createElement('img');
+var emoji = document.getElementById('emojiContainer');
+console.log(emoji);
+var delEmoji = document.getElementById('useMeEmoji');
+console.log(delEmoji);
+
+// Set the source attribute to the URL of the emoji image
+// emojiImg.src = 'C:\Users\sarvn\OneDrive\Pictures\Screenshots\Screenshot.png'
+
+// Append the img element to the emojiContainer div
+// document.getElementById('emojiContainer').appendChild(emojiImg);
+delEmoji.addEventListener("click", function () {
+emoji.className = "hideout"; 
+});  
+
+var med = document.getElementById('addnewmedicine'); // TextBox for Medicine Name And Bef Afr Food
+var Addmed = document.getElementById('Addmed'); // Add New Medicine
+console.log('log',  med.className);
+Addmed.addEventListener("click", function () {
+med.className = "hidein";
+//if (med.className == "hidein"){
+//  med.className = "hideout";
+//};
+});
+//med.addEventListener("click", function () {
+//  med.style.display = "block";
+//});
+var medsubmit = document.getElementById("medsubmit");
+var closeaddmed = document.getElementById("closeaddmed");
+medsubmit.addEventListener("click", function () {
+med.className = "hideout";
+});
+closeaddmed.addEventListener("click", function () {
+med.className = "hideout";
+});
+</script>
+
+{% endblock %}
+
