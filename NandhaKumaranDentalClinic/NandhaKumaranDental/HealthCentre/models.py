@@ -25,10 +25,13 @@ class Patient(models.Model):
     email = models.EmailField(max_length = 255, null= True, blank= True)
     rollNumber = models.CharField(max_length = 8, db_column = 'rollnumber') 
     passwordHash = models.CharField(max_length = 64, db_column = 'passwordhash')
-    emailHash = models.CharField(max_length = 64, db_column = 'emailhash')
+    emailHash = models.CharField(max_length = 64, db_column = 'emailhash')  
+    doctorid = models.ForeignKey(Doctor, related_name = "doctorid", on_delete = models.CASCADE, db_column = 'doctorid')
+    doctorname = models.CharField(max_length = 100)
+
 
     def __str__(self):
-        return "Name : " + self.name + " Address : " + self.address + " Contact : " + self.contactNumber + " Email : " + self.email
+        return "Name : " + self.name + " Address : " + self.address + " Contact : " + self.contactNumber + " Email : " + self.email + " doctorname : " + self.doctorname
     class Meta:
         db_table = 'healthcentre_patient'
         # db_column = 'contactnumber', 'rollnumber', 'passwordhash', 'emailhash'

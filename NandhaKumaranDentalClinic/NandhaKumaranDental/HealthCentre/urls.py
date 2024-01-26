@@ -39,6 +39,8 @@ urlpatterns = [
     path('deletemedicineDetails/<pk>', views.deletemedicineDetails, name = 'deletemedicineDetails'),
     path('searchPatients', views.searchPatients, name = 'searchPatients'),
     path('searchMedicine', views.searchMedicine, name = 'searchMedicine'),
+    path('updateExcel', views.updateExcel, name = 'updateExcel'),
+    path('uploadExcel', views.uploadExcel, name = 'uploadExcel'),
 ]
 
 # from django.urls import path

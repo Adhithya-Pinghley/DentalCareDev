@@ -24,12 +24,13 @@ SECRET_KEY = '2i#ra7wgn!2%2&)355v+i&dm(vv-v_a1y$=#jah_m7qi$8^706'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = ['*', '*.ngrok-free.app']
+ALLOWED_HOSTS = ['*', 'https://de0a-2401-4900-2316-6131-cd82-f03b-643e-4dc7.ngrok-free.app ']
 
 globalVar = ""
+globalDocName = ""
 # Application definition
 
-CSRF_TRUSTED_ORIGINS = ['https://ff35-2401-4900-2316-6131-40d6-d897-6a14-6c11.ngrok-free.app']
+CSRF_TRUSTED_ORIGINS = ['https://de0a-2401-4900-2316-6131-cd82-f03b-643e-4dc7.ngrok-free.app']
 
 INSTALLED_APPS = [
     'HealthCentre.apps.HealthcentreConfig',

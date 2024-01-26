@@ -20,16 +20,19 @@ import requests
 import zipfile
 from django.conf import Settings
 from WPP_Whatsapp import Create, PlaywrightSafeThread
+from weasyprint import HTML, CSS
+from django.template.loader import get_template
 if ('runserver' in sys.argv):
     from .Whatsapptestfile import whatsappApi, openWhatsapp, whatsappApiEdit, whatsappMedia, whatsappApiDoc
     # import Whatsapptestfile
 
 
-def updateExcel():
-    while True:
+def updateExcel(request):
+    # while True:
         xlPath = os.curdir #"D:\Dental-Software-Backup\Dental-Software"
         allfilesinpath = os.listdir(xlPath)
         xlFile = [file for file in allfilesinpath if file.lower().startswith('databasetables.xlsx')]
+        docName = request.session['Name']
         if not xlFile:
             workbook = openpyxl.Workbook()
             for sheetIndex, model in enumerate(apps.get_models()):
@@ -38,20 +41,23 @@ def updateExcel():
                     if model.__name__ == 'Prescription':
                         excludedColumns = ['timestamp', 'doctor', 'patient']
                         worksheet = workbook.create_sheet(title='sheet2')
+                        filterColumnName = 'prescribingDoctor'
                         
                     elif model.__name__ == 'Appointment':
                         excludedColumns = ['time', 'date', 'AppointmentTimeStamp']
                         worksheet = workbook.create_sheet(title='sheet3')
-                        
+                        filterColumnName = 'appointmentdoctor'
                     else:
                         excludedColumns = []
                         worksheet = workbook.create_sheet(title='sheet1')
+                        filterColumnName = 'doctorname'
+                        excludedColumns = ['id', 'doctorid', 'emailHash', 'doctorname']
 
                     allColumns = [field.name for field in model._meta.fields]
                     includedColumns = [col for col in allColumns if col not in excludedColumns]
                     
                     with connections['default'].cursor() as cursor:
-                        cursor.execute(f'SELECT {",".join(includedColumns)} FROM {model._meta.db_table}')
+                        cursor.execute(f'SELECT {",".join(includedColumns)} FROM {model._meta.db_table} WHERE {filterColumnName} = %s', [docName])
                         rows = cursor.fetchall()
                         
                     headers = includedColumns
@@ -78,21 +84,25 @@ def updateExcel():
                     if model.__name__ == 'Prescription':
                         excludedColumns = ['timestamp', 'doctor', 'patient']
                         worksheetExisting = workbookExisting.get_sheet_by_name('sheet2')
+                        filterColumnName = 'prescribingDoctor'
                         
                     elif model.__name__ == 'Appointment':
                         excludedColumns = ['time', 'date', 'AppointmentTimeStamp']
                         worksheetExisting = workbookExisting.get_sheet_by_name('sheet3')
+                        filterColumnName = 'appointmentdoctor'
                         
                     else:
                         excludedColumns = []
                         worksheetExisting = workbookExisting.get_sheet_by_name('sheet1')
+                        filterColumnName = 'doctorname'
+                        excludedColumns = ['id', 'doctorid', 'emailHash', 'doctorname']
                         
                     worksheetExisting.delete_rows(1, worksheetExisting.max_row)
                     allColumns = [field.name for field in model._meta.fields]
                     includedColumns = [col for col in allColumns if col not in excludedColumns]
                     
                     with connections['default'].cursor() as cursor:
-                        cursor.execute(f'SELECT {",".join(includedColumns)} FROM {model._meta.db_table}')
+                        cursor.execute(f'SELECT {",".join(includedColumns)} FROM {model._meta.db_table} WHERE {filterColumnName} = %s', [docName])
                         rows = cursor.fetchall()
                     headers = includedColumns
                     worksheetExisting.append(headers)
@@ -104,6 +114,37 @@ def updateExcel():
                 workbookExisting.close()
             except PermissionError:
                 time.sleep(1)
+        openExcel = open('databasetables.xlsx', 'rb')
+        response = HttpResponse( openExcel.read(), content_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename = databasetables.xlsx'
+        return response
+
+
+def uploadExcel(request):
+
+    if request.method == 'GET':
+        return HttpResponseRedirect(reverse('patMed'))
+    
+    if request.method == 'POST':
+        excel_file = request.FILES['excel']
+        # you may put validations here to check extension or file size
+        workbook = openpyxl.load_workbook(excel_file)
+        worksheet = workbook.get_sheet_by_name('sheet1')
+        for row in worksheet.iter_rows(min_row=2, values_only= True):
+            name, address, contactNumber, email, age, sex = row
+            existingPatient = Patient.objects.filter(name = name)
+            if  not existingPatient :
+                    doctorname = request.session['Name']
+                    doctorpk = Doctor.objects.get(name = doctorname)
+                    # Encrypting email to store inside database
+                    emailHash = emailHasher(email)
+                    patient = Patient(name = name,rollNumber = age, email = email, passwordHash = sex, address = address, 
+                                    contactNumber = contactNumber, emailHash = emailHash, doctorname = doctorname, doctorid = doctorpk)
+                    patient.save()
+            
+        response = render(request,"HealthCentre/medicinePatientPortal.html")
+        return HttpResponseRedirect(reverse('patMed'))
+
 
 def index(request):
     """ Function for displaying main page of website. """
@@ -158,10 +199,12 @@ def register(request):
                 # patient = Patient(rollNumber=request.POST['rollNumber'])
                 # Encrypting password to store inside database
                 passwordHash = userPassword
-
+                doctorname = request.session['Name']
+                doctorpk = Doctor.objects.get(name = doctorname)
                 # Encrypting email to store inside database
                 emailHash = emailHasher(userEmail)
-                patient = Patient(name = name,rollNumber = userRollNo, email = userEmail, passwordHash = passwordHash, address = userAddress, contactNumber = userContactNo, emailHash = emailHash )
+                patient = Patient(name = name,rollNumber = userRollNo, email = userEmail, passwordHash = passwordHash, address = userAddress, 
+                                  contactNumber = userContactNo, emailHash = emailHash, doctorname = doctorname, doctorid = doctorpk)
                 patient.save()
                     
             # Creating a patient object and saving insdie the database if patient is selected
@@ -220,8 +263,8 @@ def doctors(request):
     # Editing response headers so as to ignore cached versions of pages
     response = render(request,"HealthCentre/doctors.html",context)
     return responseHeadersModifier(response)
-
-
+G_docName = ""
+# globalDocName = ""
 def login(request):
     """ Function for logging in the user. """
 
@@ -241,16 +284,16 @@ def login(request):
                 numberNewPendingPrescriptions = doctor.doctorRecords.aggregate(newnewPendingPrescriptions = Count('pk', filter =( Q(isNew = True) & Q(isCompleted = False) ) ))['newnewPendingPrescriptions']
                 # Storing the same inside the session variables
                 request.session['numberNewPrescriptions'] = numberNewPendingPrescriptions
-                doctorSpecific = Prescription.objects.filter(prescribingDoctor = request.session['Name'])
+                doctorSpecific = Prescription.objects.filter(prescribingDoctor = request.session['Name']).order_by('timestamp')
                 # request.session['qrcode'] = generateqr
                 # Storing the required information inside the context variable
                 context = {
                     "message" : "Successfully Logged In.",
                     "isAuthenticated" : True,
                     "user": records.order_by('-timestamp'),
-                    "prescriptions" : Prescription.objects.all().order_by('timestamp'),
+                    "prescriptions" : doctorSpecific,
                     "prescMedicine" : Medicine.objects.all().order_by('id'),
-                    "prescriptionDoct" : doctorSpecific,
+                    
                 }
                 
                 # Editing response headers so as to ignore cached versions of pages
@@ -356,6 +399,10 @@ def login(request):
                 request.session['isLoggedIn'] = True
                 request.session['userEmail'] = doctor.emailHash
                 request.session['Name'] = doctor.name
+                Settings.globalDocName = request.session['Name']
+                global G_docName
+                G_docname = request.session['Name']
+                # globalDocName =  
 
                 
                 # Redirecting to avoid form resubmission
@@ -520,7 +567,7 @@ def doctorappointmentsfalse(request):
             # request.session['CreatenewAppointment'] = False
             doctor = Doctor.objects.get(emailHash = request.session['userEmail'])
             records = doctor.doctorRecords.all()
-            doctorSpecific = Appointment.objects.filter(appointmentdoctor = request.session['Name'])
+            doctorSpecific = Appointment.objects.filter(appointmentdoctor = request.session['Name']).order_by('-date')
             # Getting the count of the new prescriptions pending
             numberNewPendingPrescriptions = doctor.doctorRecords.aggregate(newnewPendingPrescriptions = Count('pk', filter =( Q(isNew = True) & Q(isCompleted = False) ) ))['newnewPendingPrescriptions']
 
@@ -551,7 +598,7 @@ def doctorappointments(request):
         date = range(1, 32)
         month = range(1, 13)
         year = range(int(datetime.now().year), 2099)
-        
+        doctorSpecific = Patient.objects.filter(doctorname = request.session['Name']).order_by('name')
         context = {'form': form, 
                     'model': model,
                     'hours': hour,
@@ -559,7 +606,7 @@ def doctorappointments(request):
                     'months' : month,
                     'years' : year,
                     'minutes': minute,
-                    "patients" : Patient.objects.all().order_by('id'),
+                    "patients" : doctorSpecific, #Patient.objects.all().order_by('id'),
                     # "prescPatients" : Appointment.objects.all().order_by('id')
                     }
         response = render(request, 'HealthCentre/NewAppointment.html', context)
@@ -571,6 +618,9 @@ def doctorappointments(request):
         currentDateObj = datetime.strftime(currentDateTime, "%d")
         currentMonthObj = datetime.strftime(currentDateTime, "%m")
         currentYearObj = datetime.strftime(currentDateTime, "%Y")
+        datePick = request.POST['datePick']
+        timePick = request.POST['timePick']
+
         
         if request.session['goToAppointmentsPage']:
             if request.POST['selectedPatient'] == "":
@@ -641,7 +691,7 @@ def doctorappointments(request):
                     response = render(request,'HealthCentre/NewAppointment.html', context)
                     return responseHeadersModifier(response)
             else :
-                appointment = Appointment(time = datetimeObject, date = dateobject, subject = appointmentSubject, notes = appointmentNotes,
+                appointment = Appointment(time = timePick, date = datePick, subject = appointmentSubject, notes = appointmentNotes,
                                             appointmentpatient = appointmentPatient, appointmentdoctor = appointmentDoctor, doctorPres = doctorid,
                                             patientPres = patient)
                 appointment.save()
@@ -859,8 +909,9 @@ def doctorprofile(request):
         request.session['writeNewPrescription'] = True
 
         if request.GET.get('SelectedMed') == None and request.GET.get('SelectedPat') == None and request.GET.get('SelectedSess') == None:
+            doctorSpecific = Patient.objects.filter(doctorname = request.session['Name']).order_by('name')
             context = {
-                    "patients" : Patient.objects.all().order_by('id'),
+                    "patients" : doctorSpecific, #Patient.objects.all().order_by('id'),
                     # "prescPatients" : Prescription.objects.all().order_by('id'),
                     "prescMedicines" : Medicine.objects.all().order_by('medicinename'),
                     "prescTimeOfDay" : timeofday.objects.all().order_by('id')
@@ -951,11 +1002,12 @@ def doctorprofile(request):
                 prescription.medicine.set(selectedMedicines)
                 prescription.MornAftNight.set(selectedSessions)
                 wpnumber = patientObj.contactNumber
+                doctorSpecific = Prescription.objects.filter(prescribingDoctor = request.session['Name']).order_by('timestamp')
                 global dummyBoolean
                 if dummyBoolean == True:
                     sendPdfinWhatsapp(wpnumber)
             context = {
-                    "prescriptions" : Prescription.objects.all().order_by('timestamp')
+                    "prescriptions" : doctorSpecific
                 }
         response = render(request, "HealthCentre/prescriptionportal.html", context)
         return responseHeadersModifier(response)
@@ -964,8 +1016,9 @@ def createTimeline(request):
     if request.method == 'GET':
 
         if request.GET.get('SelectedPat') == None:
+                doctorSpecific = Patient.objects.filter(doctorname = request.session['Name']).order_by('name')
                 context = {
-                        "patients" : Patient.objects.all().order_by('id'),
+                        "patients" : doctorSpecific,
                         
                         }
                 response = render(request, "HealthCentre/timeline.html", context)
@@ -1241,7 +1294,7 @@ def backgroundtastForUpdatingExcel():
     xlthread = threading.Thread(target= updateExcel)
     xlthread.daemon = True
     xlthread.start()
-backgroundtastForUpdatingExcel()
+# backgroundtastForUpdatingExcel()
 # generateqr : str
 
 qrgen = ""
@@ -1251,7 +1304,11 @@ def catchgenqr(qrCode: str , asciiQR: str , attempt: int, urlCode: str):
 
 def wpconnect():
     # pass
-    openWhatsapp.wp()
+    # global globalDocName
+    # time.sleep(10)
+    # docName = Settings.globalDocName
+    global G_docName
+    openWhatsapp.wp(G_docName)
     # generateqr : str
 
 
@@ -1305,9 +1362,11 @@ def generateqrcode():
 def backgroundtastForQrCode():
     # openwp = openWhatsapp.wp()
     # openWhatsapp()
+    
     qrthread = threading.Thread(target= wpconnect)
     qrthread.daemon = True
     qrthread.start()
+    
 backgroundtastForQrCode()
 
 def searchAppointments(request):
@@ -1321,11 +1380,11 @@ def searchAppointments(request):
         if searchQuery != '':
 
 
-            searchFilterAppointments = Appointment.objects.filter(Q(appointmentpatient__icontains = searchQuery) |
+            searchFilterAppointments = Appointment.objects.filter((Q(appointmentpatient__icontains = searchQuery) |
                                                                 Q(appointmentdoctor__icontains = searchQuery) |
                                                                 Q(notes__icontains = searchQuery) |
                                                                 Q(time__icontains = searchQuery) |
-                                                                Q(subject__icontains = searchQuery))
+                                                                Q(subject__icontains = searchQuery)) & Q(appointmentdoctor = request.session['Name']))
             context = {
                 'searchAppointmentPatients' : searchFilterAppointments.order_by('appointmentpatient')
             }
@@ -1343,32 +1402,52 @@ def searchAppointments(request):
         else:
             response = response = HttpResponseRedirect(reverse('doctorappointmentsfalse'))
             return responseHeadersModifier(response)
-    
+
+
 def searchPrescriptions(request):
     if request.method == 'GET':
-        response = response = HttpResponseRedirect(reverse('doctorprofile'))
+        response = response = HttpResponseRedirect(reverse('login'))
         return responseHeadersModifier(response)
+    
     if request.method == "POST":
         searchQuery = request.POST["searchQuery"]
+        searchDate = request.POST["searchByDate"]
         if searchQuery != '':
 
-            searchFilterPrescriptions = Prescription.objects.filter(Q(prescribingPatient__icontains = searchQuery) | 
-                                                                    Q(medicine__icontains = searchQuery) |
-                                                                    Q(timestamp__icontains = searchQuery))
+            searchFilterPrescriptions = Prescription.objects.filter(Q(prescribingPatient__icontains = searchQuery) & Q(prescribingDoctor = request.session['Name'] ))
 
             context = {
                 'searchPrescriptionPatients' : searchFilterPrescriptions.order_by('prescribingPatient')
             }
 
-            response = render(request, "HealthCentre/prescriptionsPortal.html", context)
+            response = render(request, "HealthCentre/prescriptionPortal.html", context)
+            return responseHeadersModifier(response)
+        
+        if  searchDate != '':
+            searchFiterDate = Prescription.objects.filter(Q(timestamp__icontains = searchDate))
+
+            context ={
+                'searchPrescriptionPatients': searchFiterDate.order_by('prescribingPatient')
+            }
+
+            response = render(request, "HealthCentre/prescriptionPortal.html", context)
             return responseHeadersModifier(response)
         else:
-            response = response = HttpResponseRedirect(reverse('doctorprofile'))
+            response = response = HttpResponseRedirect(reverse('login'))
             return responseHeadersModifier(response)
 
 def generatePDF(request):
+
     if request.method == "GET":
         pyautogui.hotkey('ctrl', 'p')
+        # prescriptionTemplate = (get_template("HealthCentre/NewPrescription.html"))
+        prescPDF = HTML(filename=r'NandhaKumaranDentalClinic\NandhaKumaranDental\HealthCentre\templates\HealthCentre\NewPrescription.html').write_pdf('D:\DentalCareDev\prescPDF\mentPDF.pdf')
+        #.write_pdf('D:\DentalCareDev\prescPDF\mentPDF.pdf')
+        # dirname = os.path.dirname(__file__)
+        # if os.path.exists(dirname):
+        # f = open(os.path.join('D:\DentalCareDev\prescPDF'))
+        # f.write(prescPDF)
+
     # time.sleep(60)
     return HttpResponseRedirect(reverse("doctorprofile"))
 
@@ -1394,8 +1473,9 @@ def patMed(request):
     if request.method == "GET":
         request.session['patientMedicineEdit'] = False
         # patient = Patient.objects.get(id)
+        doctorSpecific = Patient.objects.filter(doctorname = request.session['Name']).order_by('name')
         context = {
-            "editPat" : Patient.objects.all().order_by('name'),
+            "editPat" : doctorSpecific,
             "editMedicine" : Medicine.objects.all().order_by('medicinename'),
             }
 

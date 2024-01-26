@@ -34,9 +34,9 @@ client = ""
 class openWhatsapp():
         # start client with your session name
      
-    def wp():
+    def wp(DocName):
         from .views import catchgenqr
-        your_session_name = "test"
+        your_session_name = DocName #"test"
         global creator
         creator = Create(session=your_session_name, catchQR= catchgenqr , logQR= True) #catchgenqr
         Settings.globalVar = creator

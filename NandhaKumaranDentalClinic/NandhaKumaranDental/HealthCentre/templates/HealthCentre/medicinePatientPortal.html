@@ -45,13 +45,20 @@ NDC-Prescription
     </form>
 
     <br>
+    <form method="post" id = "excelUploadform" action= "{% url 'uploadExcel' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      
+      <input id = "excel" name="excel" type="file" ></input>
+      <button type="submit">Upload</button>
+    </form>
 
+    <br>
     <style>
       body{
         background-color: grey; /* Replace with your desired color code */
       }
         .prescription-table {
-          display: flex;
+          /* display: flex; */
           position:static;
           width: 10%;
           float: left;
@@ -78,7 +85,7 @@ NDC-Prescription
         }
 
         .floatRight{
-            width: 48.9%;
+            width: 46.9%;
             float :right;
         }
         .prescription-table th,
@@ -197,7 +204,7 @@ NDC-Prescription
       </table>
     </div>
     
-    <div class = "prescription-table floatRight height">
+    <div class = "prescription-table floatRight">
       <table>
         <thead>
           <tr>
@@ -208,7 +215,7 @@ NDC-Prescription
                
         <tbody>
           {% for medicine in editMedicine %}    
-            <tr class="prescription-r">
+            <tr class="prescription-row">
                 
               <td>{{ medicine.medicinename }}</td>
               <td>{{ medicine.beforeafter }}</td>

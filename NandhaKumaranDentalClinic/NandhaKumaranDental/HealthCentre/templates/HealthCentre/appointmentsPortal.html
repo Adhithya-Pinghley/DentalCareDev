@@ -97,7 +97,7 @@ NDC-Prescription
               <td>{{ appointment.appointmentpatient }}</td>
               <td>{{ appointment.date }}</td>
               <td><a class="button" href ="{% url 'editAppointments' appointment.id %}">Edit</a></td>
-              <td><a class="button" href ="{% url 'deleteappointment' appointment.id %}">Use Me</a></td>
+              <td><a class="button" onclick="confirmDelete()" id = "deletebutton" href ="{% url 'deleteappointment' appointment.id %}">Use Me</a></td>
             </tr>
             <tr class="prescription-details">
                 <td>Doctor Name : {{ appointment.appointmentdoctor }} </td>
@@ -114,7 +114,7 @@ NDC-Prescription
           <td>{{ appointmentPatientsearch.appointmentpatient }}</td>
           <td>{{ appointmentPatientsearch.date }}</td>
           <td><a class="button" href ="{% url 'editAppointments' appointmentPatientsearch.id %}">Edit</a></td>
-          <td><a class="button" href ="{% url 'deleteappointment' appointmentPatientsearch.id %}">Use Me</a></td>
+          <td><a class="button" onclick="confirmDelete()" id = "deletebutton" href ="{% url 'deleteappointment' appointmentPatientsearch.id %}">Use Me</a></td>
         </tr>
         <tr class="prescription-details">
             <td>Doctor Name : {{ appointmentPatientsearch.appointmentdoctor }} </td>
@@ -129,6 +129,17 @@ NDC-Prescription
       <script>
         // Add click event listener to each row
         const rows = document.querySelectorAll('.prescription-row');
+        var delbutton = document.getElementById('.deletebutton');
+        console.log(delbutton);
+        delbutton.addEventListener('click', function confirmDelete(event){
+          var isConfirmed = window.confirm("Are you sure you want to delete?");
+          if (isConfirmed){
+            alert("Thunder deleted!");
+          }
+          else {
+            alert("Thunder not willing to Delete")
+          }
+        });
       
         rows.forEach(row => {
           row.addEventListener('click', function() {
@@ -141,6 +152,8 @@ NDC-Prescription
             detailsRow.style.display = detailsRow.style.display === 'none' ? 'table-row' : 'none';
           });
         });
+
+        
     </script>
 
     {% if request.session.isLoggedIn  %}
@@ -199,6 +212,7 @@ NDC-Prescription
             {{ message }}
         </div>
     {% endif %}
+
 
 {% endblock %}
 
