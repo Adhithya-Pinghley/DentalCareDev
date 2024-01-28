@@ -59,7 +59,7 @@ NDC-Sign Up
                             <input name="userFirstNam"type="text" class="form-control" placeholder="First name" required>
                         </div>
                         <div class="col-6">
-                            <input name="userLastName"type="text" class="form-control" placeholder="Last name">
+                            <input name="userLastName"type="text" class="form-control" placeholder="Last name" required>
                         </div>
                         
                   </div>
@@ -69,12 +69,12 @@ NDC-Sign Up
                   <div class="form-row">
 
                         <div class="col-6">
-                            <input name="userEmail" type="email" class="form-control" placeholder="Email Address">
+                            <input name="userEmail" type="email" class="form-control" placeholder="Email Address" required>
                         </div>
                     
                         <div class="col-6">
                     
-                            <input name="userRollNo" type="text" id="userRollNo" class="form-control" placeholder="Patient Age">
+                            <input name="userRollNo" type="text" id="userRollNo" class="form-control" placeholder="Patient Age" required>
                     
                         </div>   
                   </div>
@@ -104,11 +104,11 @@ NDC-Sign Up
                   <div class="form-row">
 
                         <div class="col-6">
-                            <input name="userAddress" type="text" class="form-control" placeholder="Address">
+                            <input name="userAddress" type="text" class="form-control" placeholder="Address" required>
                         </div>
 
                         <div class="col-6">
-                            <input name="userContactNo" type="number" class="form-control" placeholder="Contact Number">
+                            <input name="userContactNo" type="number" class="form-control" placeholder="Contact Number" required>
                         </div>
 
                   </div>
@@ -118,11 +118,11 @@ NDC-Sign Up
                   <div class="form-row">
 
                         <div class="col-6">
-                            <input name="userPassword" class="form-control" placeholder="Sex">
+                            <input name="userPassword" class="form-control" placeholder="Sex" required>
                         </div>
                     {% if userType == 'doctor' %}
                         <div class="col-6">
-                            <input name="userConfirmPassword" type="password" class="form-control" placeholder="Confirm Password">
+                            <input name="userConfirmPassword" type="password" class="form-control" placeholder="Confirm Password" required>
                         </div>
                     {% endif %}
 

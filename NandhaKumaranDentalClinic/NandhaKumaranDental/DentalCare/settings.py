@@ -24,13 +24,13 @@ SECRET_KEY = '2i#ra7wgn!2%2&)355v+i&dm(vv-v_a1y$=#jah_m7qi$8^706'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = ['*', 'https://de0a-2401-4900-2316-6131-cd82-f03b-643e-4dc7.ngrok-free.app ']
+ALLOWED_HOSTS = ['*', 'https://b0da-117-254-39-203.ngrok-free.app']
 
 globalVar = ""
 globalDocName = ""
 # Application definition
 
-CSRF_TRUSTED_ORIGINS = ['https://de0a-2401-4900-2316-6131-cd82-f03b-643e-4dc7.ngrok-free.app']
+CSRF_TRUSTED_ORIGINS = ['https://b0da-117-254-39-203.ngrok-free.app']
 
 INSTALLED_APPS = [
     'HealthCentre.apps.HealthcentreConfig',
@@ -87,9 +87,9 @@ WSGI_APPLICATION = 'DentalCare.wsgi.application'
 DATABASES = {
    'default': {
        'ENGINE': 'django.db.backends.postgresql',
-       'NAME': 'hms_server',
+       'NAME': 'CMS_DB',
        'USER': 'postgres',
-       'PASSWORD': '8754412833',
+       'PASSWORD': '12345',
        'HOST': 'localhost',
        'PORT': '5432',
    }

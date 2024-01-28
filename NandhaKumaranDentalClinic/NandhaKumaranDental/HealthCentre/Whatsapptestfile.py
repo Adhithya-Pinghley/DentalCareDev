@@ -1,4 +1,4 @@
-from WPP_Whatsapp import Create, PlaywrightSafeThread
+from WPP_Whatsapp import Create, PlaywrightSafeThread, Whatsapp
 from django.conf import Settings
 # if __name__ == '__main__':
     # from .views import catchgenqr
@@ -43,43 +43,63 @@ class openWhatsapp():
         global client
         client = creator.start()
         
+        
     # Now scan Whatsapp Qrcode in browser
-
     # check state of login
         if creator.state != 'CONNECTED':
         
             raise Exception(creator.state)
         
         # return client
-    
+        client.close()
 
-def whatsappApi(patientName, whatsappNumber, time, date):
+def whatsappApi(patientName, doctorName, whatsappNumber, time, date):
     # reclient= openWhatsapp.client
+    from .views import catchgenqr
     phone_number = f"+91{whatsappNumber}" #phone_number = "+917904427507"  # or "+201016708170"
-    message = f"Dear, {patientName} This is Dr.Nanda's Dental Clinic. Your Appointment is fixed at {time} on {date}. Please do not forget your prescription!! Thanks!!"
-
-    # Simple message
-    # client = openWhatsapp.wp()
+    message = f"Dear {patientName}, This is Dr.{doctorName}, from XYZ Clinic. Your Appointment is fixed at {time} on {date}. Please do not forget your prescription!! Thanks!!"
+    # global client
     # result = client.sendText(phone_number, message)
+    Sesscreator = Create(session=doctorName, catchQR= catchgenqr, logQR= True)
+    sess = Sesscreator.session
     global client
-    result = client.sendText(phone_number, message)
+    sessStart = Sesscreator.start()
+    dumSess = sessStart.session
+    result = sessStart.sendText(phone_number, message)
+    sessStart.close()
     
 def whatsappApiDoc(doctorName, whatsappNumber, time, date):
+    from .views import catchgenqr
     phone_number = f"+91{whatsappNumber}" #phone_number = "+917904427507"  # or "+201016708170"
-    message = f"Dear, {doctorName} This is Dr.Nanda's Dental Clinic. Your Appointment is fixed at {time} on {date}. Please do not forget your prescription!! Thanks!!"
+    message = f"Dear {doctorName}, You have an appointment fixed at {time} on {date}. Thanks!!"
+    # global client
+    # # Simple message
+    # result = client.sendText(phone_number, message)
+    Sesscreator = Create(session=doctorName, catchQR= catchgenqr, logQR= True)
+    sess = Sesscreator.session
     global client
-    # Simple message
-    result = client.sendText(phone_number, message)
+    sessStart = Sesscreator.start()
+    dumSess = sessStart.session
+    result = sessStart.sendText(phone_number, message)
+    sessStart.close()
 
-def whatsappApiEdit(patientName, whatsappNumber, time, date):
+def whatsappApiEdit(patientName, doctorName, whatsappNumber, time, date):
     # reclient= openWhatsapp.client
+    from .views import catchgenqr
     phone_number = f"+91{whatsappNumber}" #phone_number = "+917904427507"  # or "+201016708170"
-    message = f"Dear, {patientName} This is Dr.Nanda's Dental Clinic. Your Appointment has been changed to {time} on {date}. Please do not forget your prescription!! Thanks!!"
+    message = f"Dear {patientName}, This is Dr.{doctorName}, from xyz Clinic. Your Appointment has been changed to {time} on {date}. Please do not forget your prescription!! Thanks!!"
+    global creator
+    
+    Sesscreator = Create(session=doctorName, catchQR= catchgenqr, logQR= True)
+    sess = Sesscreator.session
     global client
-    # Simple message
-    result = client.sendText(phone_number, message)
-
+    sessStart = Sesscreator.start()
+    dumSess = sessStart.session
+    result = sessStart.sendText(phone_number, message)
+    sessStart.close()
+    
 def whatsappMedia(whatsappNumber, pdfPathForWP):
+    from .views import catchgenqr
     phone_number = f"+91{whatsappNumber}"
     path = pdfPathForWP
     name = "dummy"

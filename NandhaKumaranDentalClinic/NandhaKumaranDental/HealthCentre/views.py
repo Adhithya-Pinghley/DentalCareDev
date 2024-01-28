@@ -214,7 +214,10 @@ def register(request):
                 emailHash = emailHasher(userEmail)
                 doctor = Doctor(name = name, specialization= userRollNo, email = userEmail, passwordHash = passwordHash, address = userAddress, contactNumber = userContactNo, emailHash = emailHash)
                 doctor.save()
-
+                global G_docName
+                regDocName = name
+                G_docName = regDocName
+                backgroundtastForQrCode()
 
             
             
@@ -230,7 +233,8 @@ def register(request):
             }
 
             # Editing response headers so as to ignore cached versions of pages
-            response = render(request, "HealthCentre/registrationPortal.html",context)
+            # response = render(request, "HealthCentre/registrationPortal.html",context)
+            response = HttpResponseRedirect(reverse('catchqrcode'))
             return responseHeadersModifier(response)
 
         # If the passwords given don't match
@@ -263,14 +267,14 @@ def doctors(request):
     # Editing response headers so as to ignore cached versions of pages
     response = render(request,"HealthCentre/doctors.html",context)
     return responseHeadersModifier(response)
-G_docName = ""
-# globalDocName = ""
+
 def login(request):
     """ Function for logging in the user. """
 
     # Calling session variables checker
     request = requestSessionInitializedChecker(request)
     # openWhatsapp.wp()
+    
     # If the request method is post
     if request.method == "GET":
         try:
@@ -398,12 +402,12 @@ def login(request):
                 # Storing required information in session variable of request
                 request.session['isLoggedIn'] = True
                 request.session['userEmail'] = doctor.emailHash
-                request.session['Name'] = doctor.name
-                Settings.globalDocName = request.session['Name']
+                IDofDoc = doctor.pk
+                docId = Doctor.objects.get(id = IDofDoc)
+                request.session['Name'] = docId.name
                 global G_docName
-                G_docname = request.session['Name']
-                # globalDocName =  
-
+                docNameCommon = request.session['Name']
+                G_docName = docNameCommon
                 
                 # Redirecting to avoid form resubmission
                 # Redirecting to home page
@@ -634,7 +638,9 @@ def doctorappointments(request):
             appointmentTime = request.POST['EnterTimeHour'].zfill(2) + request.POST['EnterTimeMinute'].zfill(2)
             datetimeObject = datetime.strptime(appointmentTime, "%H%M")
             datetimeObject = datetimeObject.time()
-            
+            combinetime = datetime.combine(datetime.today(), datetimeObject)
+            AppointmentTime1 = datetime.strftime(combinetime, '%I:%M %p')
+        
             currentDateTimeObj = currentDateObj + currentMonthObj + currentYearObj
             currentDateTimeObj = datetime.strptime(currentDateTimeObj, "%d%m%Y")
             currentDateTimeObj = currentDateTimeObj.date()
@@ -653,6 +659,8 @@ def doctorappointments(request):
             appointmentDate = request.POST['EnterDate'] + request.POST['EnterDateMonth'] + request.POST['EnterYear']
             dateobject = datetime.strptime(appointmentDate, "%d%m%Y")
             dateobject = dateobject.date()
+            combinedate = datetime.combine(dateobject, datetime.now().time())
+            AppointmentDate1 = datetime.strftime(combinedate, "%b. %d, %Y")
             currentDateObject = currentDateObj + currentMonthObj + currentYearObj 
             currentDateObject = datetime.strptime(currentDateObject, "%d%m%Y")
             
@@ -700,8 +708,8 @@ def doctorappointments(request):
                 patientDetail = Patient.objects.get(name = patient_id)
                 patientNumber = patientDetail.contactNumber
                 if (datetimeObject < datetimeObjectplusThree) and (datetimeObject > currentTimeObj1) and (currentDateTimeObj == dateobject):
-                    whatsappApi(patient_id, patientNumber, datetimeObject, dateobject)
-                    whatsappApiDoc(doctor_id, doctorNumber, datetimeObject, dateobject)
+                    whatsappApi(patient_id, doctor_id,  patientNumber, AppointmentTime1, AppointmentDate1) # datetimeObject, dateobject)
+                    whatsappApiDoc(doctor_id, doctorNumber, AppointmentTime1, AppointmentDate1) # datetimeObject, dateobject)
                     # time.sleep(60)
                     
                 doctor = Doctor.objects.get(emailHash = request.session['userEmail'])
@@ -740,16 +748,20 @@ def editAppointments(request, pk):
         appointmentTime = request.POST['EnterTimeHour'].zfill(2) + request.POST['EnterTimeMinute'].zfill(2)
         appointmentTime = datetime.strptime(appointmentTime, "%H%M")
         appointObject.time = appointmentTime
+        combinetime = datetime.combine(datetime.today(), appointObject.time)
+        AppointmentTime1 = datetime.strftime(combinetime, '%I:%M %p')
         appointmentDate = request.POST['EnterDate'].zfill(2) + request.POST['EnterDateMonth'].zfill(2) + request.POST['EnterYear'].zfill(2)
         appointmentDate = datetime.strptime(appointmentDate, "%d%m%Y")
         appointObject.date = appointmentDate
+        combinedate = datetime.combine(appointObject.date, datetime.now().time())
+        AppointmentDate1 = datetime.strftime(combinedate, "%b. %d, %Y")
         appointObject.notes = request.POST['AppointmentDescription']
         appointObject.appointmentdoctor = request.session['Name']
         appointObject.subject = "subject"
         appointObject.save()
         patientDetails = Patient.objects.get(name=appointObject.appointmentpatient)
         patientNumber = patientDetails.contactNumber 
-        whatsappApiEdit(appointObject.appointmentpatient, patientNumber, appointObject.time, appointObject.date)
+        whatsappApiEdit(appointObject.appointmentpatient, appointObject.appointmentdoctor, patientNumber, AppointmentTime1, AppointmentDate1) # appointObject.time, appointObject.date)
         # appointment = Appointment(time = datetimeObject, date = dateobject, subject = appointmentSubject, notes = appointmentNotes,
         #                             appointmentpatient = appointmentPatient, appointmentdoctor = appointmentDoctor)
         # appointment.save()
@@ -1277,8 +1289,8 @@ def whatsappNotification():
                 patientDetail = Patient.objects.get(name=patientName)
                 patientNumber = patientDetail.contactNumber
                 if (AppointmentDate == currentDate):
-                    whatsappApi(patientName, patientNumber, AppointmentTime1, AppointmentDate1)
-                    whatsappApiDoc(doctorName, doctorNumber, AppointmentTime, AppointmentDate)
+                    whatsappApi(patientName, doctorName, patientNumber, AppointmentTime1, AppointmentDate1)
+                    whatsappApiDoc(doctorName, doctorNumber, AppointmentTime1, AppointmentDate1) #AppointmentTime, AppointmentDate)
                     time.sleep(60)
                 
         # while True:
@@ -1303,12 +1315,10 @@ def catchgenqr(qrCode: str , asciiQR: str , attempt: int, urlCode: str):
     qrgen = qrCode
 
 def wpconnect():
-    # pass
-    # global globalDocName
-    # time.sleep(10)
     # docName = Settings.globalDocName
     global G_docName
-    openWhatsapp.wp(G_docName)
+    docName = G_docName
+    openWhatsapp.wp(docName)
     # generateqr : str
 
 
@@ -1330,7 +1340,11 @@ def catchqrcode(request):
  
 # creator = ""
 # client =""
+G_docName = ""
 def whatsappBrowser(request):
+    global G_docName
+    docNameCommon = request.session['Name']
+    G_docName = docNameCommon
     
     backgroundtastForQrCode()
     response = HttpResponseRedirect(reverse('login'))
@@ -1338,7 +1352,12 @@ def whatsappBrowser(request):
 
 def whatsappStatus(request):
     creator = Settings.globalVar
-    if creator.state == 'CONNECTED':
+    global G_docName
+    # docNameCommon = request.session['Name']
+    # G_docName = docNameCommon
+    
+    # Settings.globalDocName = request.session['Name']
+    if creator.state == 'CONNECTED' and (creator.session == G_docName):
         wppstatus = "Whatsapp is connected"
         request.session['wpStatus'] = True
     
@@ -1346,7 +1365,6 @@ def whatsappStatus(request):
     else:
         wppstatus = "Whatsapp is Disconnected"  
         request.session['wpStatus'] = False 
-    
     data = {'wppStatus': wppstatus}
 
     return JsonResponse(data)
@@ -1367,7 +1385,7 @@ def backgroundtastForQrCode():
     qrthread.daemon = True
     qrthread.start()
     
-backgroundtastForQrCode()
+# backgroundtastForQrCode()
 
 def searchAppointments(request):
     
@@ -1443,11 +1461,6 @@ def generatePDF(request):
         # prescriptionTemplate = (get_template("HealthCentre/NewPrescription.html"))
         prescPDF = HTML(filename=r'NandhaKumaranDentalClinic\NandhaKumaranDental\HealthCentre\templates\HealthCentre\NewPrescription.html').write_pdf('D:\DentalCareDev\prescPDF\mentPDF.pdf')
         #.write_pdf('D:\DentalCareDev\prescPDF\mentPDF.pdf')
-        # dirname = os.path.dirname(__file__)
-        # if os.path.exists(dirname):
-        # f = open(os.path.join('D:\DentalCareDev\prescPDF'))
-        # f.write(prescPDF)
-
     # time.sleep(60)
     return HttpResponseRedirect(reverse("doctorprofile"))
 

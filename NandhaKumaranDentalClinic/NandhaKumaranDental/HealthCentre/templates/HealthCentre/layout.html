@@ -101,7 +101,7 @@
                                 <h6 class ="nav-link" name = "wppStatus" id ="wppStatus" style="color:black"> {{ wppStatus }} </h6>
                                 </li>
                                 <br>
-                                <li class="nav-item hidein" id="whatsappUnhide" >
+                                <li class="nav-item hideout" id="whatsappUnhide" >
                                     <a class="nav-link"  href="{% url 'whatsappBrowser' %}" style="color:black"> Connect Whatsapp </a>
                                 </li>
                            
@@ -132,57 +132,10 @@
             var testData
             
             // document.addEventListener("DOMContentLoaded", function () {
-    function updatewhatsappStatus() {
-    $.ajax({
-      url: "{% url 'whatsappStatus' %}",
-      method: 'GET',
-      dataType : 'json',
-    //   data :  {'wppStatus': wppstatus},
-      success: function(data) {
-        $('#wppStatus').text(data.wppStatus);
-        testData = data.wppStatus;
-        
-        var element1 = document.getElementById('whatsappUnhide');
-        var element2 = testData;
-
-        console.log('wp stat:',testData);
-        
-        if(element2) {
-            if (element2 == "Whatsapp is connected") {
-                
-                element1.className = "hideout";
-            } else {
-                element1.className = "hidein";
-            }
-        }
-        console.log('classname stat', element1.className);
-      },
-      error: function(error) {
-        console.error('Error fetching WhatsApp status:', error);
     
-      }
-      
-    });
-}
 // });
-  document.addEventListener("DOMContentLoaded", function () {
-    // $(document).ready(function() {
-        // updatewhatsappStatus();
-        setInterval(updatewhatsappStatus, 1000);
-        
-  });
-  document.addEventListener("DOMContentLoaded", function () {
-    function whatsapphide(element2) {
-    var element2 = document.getElementById('whatsappUnhide');
-    console.log('log',val1)
-    if (element2 == "Whatsapp is connected") {
-                
-        element2.className = "hideout";
-            } else {
-                element2.className = "hidein";
-            }
-        }
-  });
+  
+  
     
 </script>
 
