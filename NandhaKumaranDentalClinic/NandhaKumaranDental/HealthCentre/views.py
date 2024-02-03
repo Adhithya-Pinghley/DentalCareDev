@@ -2,7 +2,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from .models import Doctor, Patient, Prescription, passwordHasher, emailHasher, Appointment, Medicine, timeofday
+from .models import Doctor, Patient, Prescription, passwordHasher, emailHasher, Appointment, Medicine, timeofday, doctorlogo
 from django.db.models import Count, Q
 from django.contrib.auth.decorators import login_required
 from .forms import AppointmentSet, AppointmentSetForm, AppointmentForm
@@ -22,6 +22,8 @@ from django.conf import Settings
 from WPP_Whatsapp import Create, PlaywrightSafeThread
 from weasyprint import HTML, CSS
 from django.template.loader import get_template
+# from django.core.files.storage import default_storage
+
 if ('runserver' in sys.argv):
     from .Whatsapptestfile import whatsappApi, openWhatsapp, whatsappApiEdit, whatsappMedia, whatsappApiDoc
     # import Whatsapptestfile
@@ -176,7 +178,6 @@ def register(request):
         userAddress = request.POST["userAddress"]
         userContactNo = request.POST["userContactNo"]
         userPassword = request.POST["userPassword"]
-        
         userType = request.POST['userType']
         if userType == 'patient':
             userConfirmPassword = userPassword
@@ -209,10 +210,11 @@ def register(request):
                     
             # Creating a patient object and saving insdie the database if patient is selected
             elif userType == 'doctor':
-                
+                eduQualification = request.POST["educationQualification"]
+                clinicName = request.POST["clinicName"]
                 passwordHash = passwordHasher(userPassword)
                 emailHash = emailHasher(userEmail)
-                doctor = Doctor(name = name, specialization= userRollNo, email = userEmail, passwordHash = passwordHash, address = userAddress, contactNumber = userContactNo, emailHash = emailHash)
+                doctor = Doctor(name = name, specialization= userRollNo, email = userEmail, passwordHash = passwordHash, address = userAddress, contactNumber = userContactNo, emailHash = emailHash, educationalQualification = eduQualification, clinicName = clinicName )
                 doctor.save()
 
 
@@ -263,6 +265,7 @@ def doctors(request):
     # Editing response headers so as to ignore cached versions of pages
     response = render(request,"HealthCentre/doctors.html",context)
     return responseHeadersModifier(response)
+
 G_docName = ""
 # globalDocName = ""
 def login(request):
@@ -284,7 +287,8 @@ def login(request):
                 numberNewPendingPrescriptions = doctor.doctorRecords.aggregate(newnewPendingPrescriptions = Count('pk', filter =( Q(isNew = True) & Q(isCompleted = False) ) ))['newnewPendingPrescriptions']
                 # Storing the same inside the session variables
                 request.session['numberNewPrescriptions'] = numberNewPendingPrescriptions
-                doctorSpecific = Prescription.objects.filter(prescribingDoctor = request.session['Name']).order_by('timestamp')
+                sessionDoctor = request.session['Name']
+                doctorSpecific = Prescription.objects.filter(prescribingDoctor = sessionDoctor).order_by('timestamp')
                 # request.session['qrcode'] = generateqr
                 # Storing the required information inside the context variable
                 context = {
@@ -411,7 +415,7 @@ def login(request):
                 # response = render(request,"HealthCentre/userDoctorProfilePortal.html")
                 # response = HttpResponseRedirect(reverse('onlineprescription'))
                 # response = render(request,"HealthCentre/prescriptionPortal.html")
-                response = HttpResponseRedirect(reverse('index'))
+                response = HttpResponseRedirect(reverse('login'))
                 return responseHeadersModifier(response)
 
             # Else if the password inputted is worng and doesn't match
@@ -551,11 +555,20 @@ def logout(request):
     return responseHeadersModifier(response)
 
 def contactus(request):
-    """Function to display contact information."""
+    """Function to display Docotr contact information."""
+    if request.method == 'GET':
+        if request.session['isLoggedIn'] and request.session['isDoctor'] == True:
+            doctorDetails = Doctor.objects.all()
+            doctrName = doctorDetails.name
+            doctrAddr = doctorDetails.address
+            doctrName = doctorDetails.
+
+
+
 
     # Editing response headers so as to ignore cached versions of pages
-    response = render(request, "HealthCentre/contactus.html")
-    return responseHeadersModifier(response)
+        response = render(request, "HealthCentre/contactus.html")
+        return responseHeadersModifier(response)
 
 
 def doctorappointmentsfalse(request):
@@ -824,6 +837,7 @@ def deleteappointment(request, pk):
     response = response = HttpResponseRedirect(reverse('doctorappointmentsfalse'))
     return responseHeadersModifier(response)
 
+
 selectedMedicineID = []
 selectedSessionID = []
 def createNewMedicine(request):
@@ -910,11 +924,22 @@ def doctorprofile(request):
 
         if request.GET.get('SelectedMed') == None and request.GET.get('SelectedPat') == None and request.GET.get('SelectedSess') == None:
             doctorSpecific = Patient.objects.filter(doctorname = request.session['Name']).order_by('name')
+            try:
+                doctor = doctorlogo.objects.get(docname=request.session['Name'])
+                docLogo = doctor.logo
+                absPath = docLogo.path.split(os.path.sep)
+                pathIndex = absPath.index("static")
+                newPath = os.path.join(*absPath[pathIndex:])
+
+            except doctorlogo.DoesNotExist:
+                newPath = ''
+                    
             context = {
                     "patients" : doctorSpecific, #Patient.objects.all().order_by('id'),
                     # "prescPatients" : Prescription.objects.all().order_by('id'),
                     "prescMedicines" : Medicine.objects.all().order_by('medicinename'),
-                    "prescTimeOfDay" : timeofday.objects.all().order_by('id')
+                    "prescTimeOfDay" : timeofday.objects.all().order_by('id'),
+                    "doclogo" : newPath,
                     }
             response = render(request, "HealthCentre/NewPrescription.html", context)
             return responseHeadersModifier(response)
@@ -1011,7 +1036,49 @@ def doctorprofile(request):
                 }
         response = render(request, "HealthCentre/prescriptionportal.html", context)
         return responseHeadersModifier(response)
-     
+
+      
+def uploadImage(request):
+    
+    if request.method == 'GET':
+        response = HttpResponseRedirect(reverse('doctorprofile'))
+        return responseHeadersModifier(response)
+    if request.method == 'POST':
+        nameofdoctor = request.session['Name']
+        image_file = request.FILES.get('LogoImage')
+        try:
+            logoobj = doctorlogo.objects.get(docname = nameofdoctor)
+            if logoobj.logo != image_file:
+                logoobj.logo = image_file
+                logoobj.save()
+                logoOfDoc = logoobj.logo
+            elif logoobj.logo == image_file:
+                logoobj.logo = image_file
+                logoobj.save()
+                logoOfDoc = logoobj.logo
+            context ={
+                    "doclogo" :logoOfDoc,
+                        
+                    }
+            
+            response = HttpResponseRedirect(reverse('doctorprofile'))
+            return responseHeadersModifier(response)
+        except doctorlogo.DoesNotExist:
+            doctorObj = Doctor.objects.get(name = nameofdoctor)
+            docID = doctorObj.pk
+            doctorlogoupload = doctorlogo(logo= image_file, docname = nameofdoctor, doctorid= doctorObj )
+            doctorlogoupload.save()
+            logoOfDoc = doctorlogoupload.logo
+
+            context ={
+                        "doclogo" :logoOfDoc,
+                            
+                        }
+            response = render(request, 'HealthCentre/NewPrescription.html',context)
+            return responseHeadersModifier(response)
+        # response = render(request, 'HealthCentre/NewPrescription.html',context)
+        # return responseHeadersModifier(response)
+
 def createTimeline(request):
     if request.method == 'GET':
 

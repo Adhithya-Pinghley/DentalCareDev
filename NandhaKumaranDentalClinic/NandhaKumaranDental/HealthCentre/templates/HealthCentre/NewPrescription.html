@@ -122,17 +122,30 @@ NDC-Prescription
         }
     </style>
     <!-- style="margin-right: 90%;" -->
-    
+    <form method="post" enctype="multipart/form-data" action="{% url 'uploadImage' %}" >
+      {% csrf_token %}
+        <label for="image">Select Image:</label>
+        <input type="file" name="LogoImage" accept="image/*" required>
+        <br>
+        <input type="submit" value="Upload" >
+
+      
+    </form>
+    <br>
         <form onsubmit="return checkConfirm()" action="{% url 'doctorprofile' %}" method="post" id="prescriptionForm">
           {% csrf_token %}
-          <div class="container center_div"style = "background:rgba(255,255,255);padding-top:2%;padding-bottom:2%" width="300px">  
-          <!-- <img src="{% static 'HealthCentre/images/NandaLogo.jpg' %}" style="width:100%;height:100%;"></img> -->
-          <form method="post" enctype="multipart/form-data" action="{% url 'upload_image' %}">
-            {% csrf_token %}
-            
-            <input type="submit" value="Upload">
-          </form>
-  
+          <div class="container center_div"style = "background:rgba(255,255,255);padding-top:2%;padding-bottom:2%" width="300px"> 
+            <br> 
+          <!-- <img src="{% static 'HealthCentre/images/NandaLogo.jpg' %}" style="width:100%;height:100%;" ></img> -->
+          <!-- <img src=" C:\Users\sarvn\OneDrive\Pictures\NandaLogo.jpg " style="width:100%;height:100%;" ></img> -->
+          
+          <!-- style="width:100%;height:100%;" -->
+          <div style = "width:950px;height:300px; top : -50%;border: 1px solid #ccc;">
+          <img src="..//{{doclogo}}" style="width:100%;height:100%;" ></img>
+
+        </div>
+          <br>
+
           <li class="dropdown-divider" style="margin-left:25%;margin-right:25%;border-color:black"></li>
           <div class="form-inline" >
               <label for = "selectedPatient" style="color:rgb(0, 0, 0);"><strong>Patient Name: </strong></label>
