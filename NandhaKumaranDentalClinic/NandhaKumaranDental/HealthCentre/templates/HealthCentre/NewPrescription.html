@@ -1,7 +1,7 @@
 {% extends "HealthCentre/layout.html" %}
 {% load static %}
 {% block title %}
-NDC-Prescription
+Clinical-Prescription
 {% endblock%}
 
 {% block script %}
@@ -11,7 +11,7 @@ NDC-Prescription
 
 {% block bodytag %}
 
-    {% load static %}
+    
     <body background="{% static 'HealthCentre/images/plain.jpg' %}" style="background-size: auto auto;">
 
 {% endblock %}
@@ -126,12 +126,9 @@ NDC-Prescription
         <form onsubmit="return checkConfirm()" action="{% url 'doctorprofile' %}" method="post" id="prescriptionForm">
           {% csrf_token %}
           <div class="container center_div"style = "background:rgba(255,255,255);padding-top:2%;padding-bottom:2%" width="300px">  
-          <!-- <img src="{% static 'HealthCentre/images/NandaLogo.jpg' %}" style="width:100%;height:100%;"></img> -->
-          <form method="post" enctype="multipart/form-data" action="{% url 'upload_image' %}">
-            {% csrf_token %}
-            
-            <input type="submit" value="Upload">
-          </form>
+          
+            <img src="{% static 'HealthCentre/images/NandaLogo.jpg' %}" style="width:100%;height:100%;"></img>
+          
   
           <li class="dropdown-divider" style="margin-left:25%;margin-right:25%;border-color:black"></li>
           <div class="form-inline" >
@@ -186,7 +183,15 @@ NDC-Prescription
           <th>Morning</th>
           <th>Afternoon</th>
           <th>Night</th>
-          <th><button class="add-medicine hide" type="button" id="addMedicine"><strong>+</strong></button></th>
+          <th>
+            {% if clickedOnAddRow %}
+            {% if sessionIsSelected %}
+            {% if medicineIsSelected %}
+            <button class="add-medicine hide" type="button" id="addMedicine"><strong>+</strong></button>
+            {% endif %}
+            {% endif %}
+            {% endif %}
+          </th>
          </tr>
         </thead>
         
@@ -249,9 +254,9 @@ NDC-Prescription
           <!-- Data will be displayed here -->
         </div>
           <div class="form-group" style = "margin-left: 70%;">
-            <label class="form-group" for = "noOfDays" style="color:rgb(0, 0, 0);">For </label>
-            <input name="noOfDays" type="text" class="form-group" placeholder="days">
-            <label class="form-group" for = "noOfDays" style="color:rgb(0, 0, 0);">days </label>
+            <label class="form-group" style="color:rgb(0, 0, 0);">For </label>
+            <input name="noOfDays" id = "noOfDays" type="text" class="form-group" placeholder="days">
+            <label class="form-group" style="color:rgb(0, 0, 0);">days </label>
           </div>
 
           
@@ -324,6 +329,7 @@ NDC-Prescription
       </script>
       <script>
         
+
         function sleep(milliseconds) {
           const date = Date.now();
           let currentDate = null;
@@ -426,6 +432,33 @@ NDC-Prescription
               element.value = '';
               //element.textContent = '';
             });
+            $.ajax({
+              type : 'GET',
+              url : "{% url 'countPrescriptionRows' %}",
+              data : {
+            csrfmiddlewaretoken: '{{ csrf_token }}',
+              },
+              dataType : 'json',
+              success : function(data) {
+                $('#beforeAfter').html(data.MedBefAft);
+                $('#clickedOnAddRow').val(data.clickedOnAddRow);
+                $('#medicineIsSelected').val(data.medicineIsSelected);
+                $('#sessionIsSelected').val(data.sessionIsSelected);
+                let clickedOnAddRow = data.clickedOnAddRow;
+                let medicineIsSelected = data.medicineIsSelected;
+                let sessionIsSelected = data.sessionIsSelected;
+                if (clickedOnAddRow && medicineIsSelected && sessionIsSelected) {
+                  document.getElementById("addMedicine").className = "add-medicine hide";
+                } else {
+                  document.getElementById("addMedicine").className = "hideout";
+                };
+                //console.log('true or false :', data.clickedOnAddRow);
+                //console.log('true or :', data.medicineIsSelected);
+               // console.log('true :', data.sessionIsSelected);
+              }
+              
+                  });
+                  
             // newRow.querySelector("#SelectedMedicine").value = "";
             // newRow.querySelector("#beforeAfter").textContent = "";
             // newRow.querySelector("#morning").textContent = "";
@@ -440,11 +473,25 @@ NDC-Prescription
               fetch(`addingMedicineData/${selectedMedicineValue}`)
               .then(response=> response.json())
               .then(data=> {
+                let clickedOnAddRow = data.clickedOnAddRow;
+                let medicineIsSelected = data.medicineIsSelected;
+                let sessionIsSelected = data.sessionIsSelected;
+                if (clickedOnAddRow && medicineIsSelected && sessionIsSelected) {
+                  document.getElementById("addMedicine").className = "add-medicine hide";
+                } else {
+                  document.getElementById("addMedicine").className = "hideout";
+                };
               //newRow.querySelector('h6[name = "morning"]').textContent = data.MedMorn
               //newRow.querySelector('h6[name = "afternoon"]').textContent = data.medAft
               //newRow.querySelector('h6[name = "night"]').textContent = data.medNight
-              newRow.querySelector('h6[name = "beforeAfter"]').textContent = data.MedBefAft
+                
+              newRow.querySelector('h6[name = "beforeAfter"]').textContent = data.MedBefAft;
+                console.log('clickedOnAddRow :', clickedOnAddRow);
+                console.log('medicineIsSelected :', medicineIsSelected);
+                console.log('sessionIsSelected :', sessionIsSelected);
+              
             });
+            
             });
             var prescriptionsession = newRow.querySelector("select[name='SelectedSession']");
           prescriptionsession.addEventListener('change', function(){
@@ -453,12 +500,24 @@ NDC-Prescription
            fetch(`addingSessionData/${SelectedSessionValue}`)
            .then(response=> response.json())
            .then(data=>{
-            newRow.querySelector('h6[name = "morning"]').textContent = data.MedMorn
-            newRow.querySelector('h6[name = "afternoon"]').textContent = data.medAft
-            newRow.querySelector('h6[name = "night"]').textContent = data.medNight    
+                let clickedOnAddRow = data.clickedOnAddRow;
+                let medicineIsSelected = data.medicineIsSelected;
+                let sessionIsSelected = data.sessionIsSelected;
+                newRow.querySelector('h6[name = "morning"]').textContent = data.MedMorn
+                newRow.querySelector('h6[name = "afternoon"]').textContent = data.medAft
+                newRow.querySelector('h6[name = "night"]').textContent = data.medNight    
+                console.log('clickedOnAddRow :', clickedOnAddRow);
+                console.log('medicineIsSelected :', medicineIsSelected);
+                console.log('sessionIsSelected :', sessionIsSelected);
+                if (clickedOnAddRow && medicineIsSelected && sessionIsSelected) {
+                  document.getElementById("addMedicine").className = "add-medicine hide";
+                } else {
+                  document.getElementById("addMedicine").className = "hideout";
+                };
            }); 
         });
           });
+          
         });
         
     
@@ -523,6 +582,9 @@ NDC-Prescription
               dataType : 'json',
               success : function(data) {
                 $('#beforeAfter').html(data.MedBefAft);
+                $('#clickedOnAddRow').val(data.clickedOnAddRow);
+                $('#medicineIsSelected').val(data.medicineIsSelected);
+                $('#sessionIsSelected').val(data.sessionIsSelected);    
                 //$('#medicine-data').html(
                   //    'BeforeAfter: ' +  data.MedBefAft +
                     //  '<br> Morning: ' + data.MedMorn +
@@ -549,12 +611,10 @@ NDC-Prescription
                 $('#morning').html(data.MedMorn);
                 $('#afternoon').html(data.medAft);
                 $('#night').html(data.medNight);
-                //$('#medicine-data').html(
-                  //    'BeforeAfter: ' +  data.MedBefAft +
-                    //  '<br> Morning: ' + data.MedMorn +
-                      //'<br> Afternoon: ' + data.medAft +
-                      //'<br> Night: ' + data.medNight
-                  
+                $('#clickedOnAddRow').val(data.clickedOnAddRow);
+                $('#medicineIsSelected').val(data.medicineIsSelected);
+                $('#sessionIsSelected').val(data.sessionIsSelected);
+                
               },
               error : function(xhr, status, error) {
                 console.error(xhr.responseText)
@@ -563,5 +623,19 @@ NDC-Prescription
             });
           });
         
+          $('#noOfDays').change(function() {
+            var noofdays = $(this).val();
+            $.ajax({
+              method: 'GET',
+              csrfmiddlewaretoken: '{{ csrf_token }}',
+              url : '{% url "doctorprofile" %}',
+              data : {'noofdays' : encodeURIComponent(noofdays)},
+              dataType : 'json',
+              error : function(xhr, status, error) {
+                console.error(xhr.responseText)
+              }
+              
+            });
+          });
       </script>
       {% endblock %}

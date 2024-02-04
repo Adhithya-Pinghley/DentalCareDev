@@ -1,0 +1,552 @@
+{% extends "HealthCentre/layout.html" %}
+{% block title %}
+Clinical-Prescription
+{% endblock %}
+
+{% block script %}
+
+    
+{% endblock %}
+
+{% block bodytag %}
+
+    
+    
+
+{% endblock %}
+
+
+{% block body %}
+
+    <br>
+
+    <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
+
+    
+
+    {% if successPrescriptionMessage %}
+        <br>
+            <div style="text-align:center;margin:0 auto;"class="alert alert-warning" role="alert">
+                {{ successPrescriptionMessage }}
+            </div>
+    {% endif %}
+    <style>
+      .a-right {
+        position: fixed;
+        right: 50px;
+        margin-right: 5%;
+      }
+      .a-left {
+        position: fixed;
+        left: 50px;
+      }
+      @media print {
+         .hide {
+          visibility: hidden;
+         } 
+      }  
+      .invisible{
+        display : none;
+      }
+      button.first{
+        position: absolute;
+      }
+      .hideout{
+        visibility : hidden;
+      }
+      .hidein{
+        visibility : visible;
+      }
+      
+    </style>
+    {% if request.session.isLoggedIn  %}
+      {% if request.session.isDoctor %}
+      <!-- <form align="left" action="{% url 'doctorprofile' %}" method="post" style="margin-right:5%"> -->
+        {% comment %} <div class ="hide">
+       <li class = "button">
+        <a class="button" align = "right" type ="submit" style="color:rgb(30,126,216); margin-left: 3%;" href="{% url 'doctorprofile' %}">Write new prescription</a>
+        <!-- <li class = "button"> --> <br>
+          <a class="button"  align = "right" type ="submit" style="color:rgb(30, 126, 216); margin-left: 3%;" href="{% url 'register' %}">Add new patient</a>
+        <!-- </li> -->
+        <button class="button" id="generatePdfFile" align = "right" type ="submit" style="color:rgb(30, 126, 216); margin-left: 3%;" >Print/Save pdf</button>
+    </li> 
+    <!-- href="{% url 'generatePDF' %}" -->
+  </div>
+  <br>
+          
+          <button class="hide" id="Addmed" align = "right" type ="button" >Add new medicine</button><button id="closeaddmed" type="button" class="hide"><strong>x</strong></button>
+        
+        <!-- <button type="submit" name="writeNewPrescription" class="btn btn-warning btn-lg" action="{% url 'doctorprofile' %}">Write new prescription</button> -->
+        <form method = "post" id = "addnewmedicineform" action = "{% url 'createNewMedicine' %}">
+          {% csrf_token %}
+          <div id = "addnewmedicine" class = 'hideout'>
+          <input name="NewmedicineName" placeholder="Medicine Name"></input>
+          <select name="befAftFood" id ="befAftFood">
+            <option>Before</option>
+            <option>After</option>
+          </select>
+          <button id = "medsubmit" type="submit" class="btn btn-warning first">Add</button>
+        </div>
+        </form>
+      <br> {% endcomment %}
+      {% comment %} <li class="dropdown-divider" style="margin-left:25%;margin-right:25%;border-color:black"></li>
+      <br> {% endcomment %}
+      <!-- </form> -->
+    
+      <style>
+        .prescription-table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+      
+        .prescription-table th,
+        .prescription-table td {
+          padding: 10px;
+          text-align: left;
+          border-bottom: 1px solid #ddd;
+        }
+      
+        .prescription-table th {
+          background-color: #f2f2f2;
+        }
+      
+        .prescription-table tr:hover {
+          background-color: #f5f5f5;
+        }
+
+        .prescription-details {
+          display: none;
+          background-color: #f5f5f5;
+          padding: 10px;
+        }
+    </style>
+    <!-- style="margin-right: 90%;" -->
+    
+        <form onsubmit="return checkConfirm()" action="{% url 'doctorprofile' %}" method="post" id="prescriptionForm">
+          {% csrf_token %}
+          <div class="container center_div"style = "background:rgba(255,255,255);padding-top:2%;padding-bottom:2%" width="300px">  
+          <div style = "width:850px;height:200px; top : -50%;border: 1px solid #ccc;">
+            <img src="E:\Adhithya\dental-software\DentalCareDev\NandhaKumaranDentalClinic\NandhaKumaranDental\HealthCentre\static\HealthCentre\images\NandaLogo.jpg" style="width:100%;height:100%;"></img>
+          </div>
+  
+          <li class="dropdown-divider" style="margin-left:25%;margin-right:25%;border-color:black"></li>
+          <div class = "form-inline">
+              <label for = "selectedPatient" style="color:rgb(0, 0, 0); display: inline; margin-left: 5px;"><strong>Patient Name: </strong></label>
+              <h6 style="display: inline; margin-left: 5px;" name = "patientName" id = "patientName">{{ patientName }}</h6>
+                {% comment %} <select name="selectedPatient" id = "selectedPatient" class="form-inline" placeholder="Select Patient">
+                  <option value = "{{ patientName }}">{{ patientName }}</option>
+                    {% for patient in patients %}
+                        <option value="{{ patient.name }}">{{ patient.name }}</option>
+                    {% endfor %}
+                    
+                </select> {% endcomment %}
+                <!-- </div> -->
+                
+                <label for = "patientAge" style="color:rgb(0, 0, 0); display: inline; margin-left: 5px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Age: </strong></label>
+                <h6 style="display: inline; margin-left: 5px;" name="patientAge" id = "patientAge">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ patientAge }}</h6>
+                
+                <label for = "patientSex" style="color:rgb(0, 0, 0); display: inline; margin-left: 5px;"><strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Sex: </strong></label>
+                <h6 style="display: inline; margin-left: 5px;" name="patientSex" id = "patientSex">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ patientSex }}</h6>
+              
+                <label for = "datetime" style="color:rgb(0, 0, 0); display: inline; margin-left: 5px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Date: </strong></label>
+                <h6 style="display: inline; margin-left: 5px;" name="datetime" id = "datetime">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ datetime }}</h6>
+              </div>
+              <script>
+                // Get the current date and time
+                const currentDateTime = new Date();
+            
+                // Format the date and time as a string
+                const formattedDateTime = currentDateTime.toLocaleString(undefined, {day:"numeric", month:"long", year: "numeric"});
+            
+                // Display the formatted date and time in the "datetime" paragraph
+                const datetimeElement = document.getElementById("datetime");
+                datetimeElement.textContent = formattedDateTime;
+              </script>
+          </div>
+          <br>
+          
+          <br>
+          <!-- <label  style="color:white">or enter patient name</label>
+          <div class="col-6 ">
+            <input name="PatientName"type="text" class="form-control" placeholder="Enter Patient Name">
+        </div> -->
+        
+        
+        
+        <table class = "prescription-table" id = "addPrescription">
+          <thead>
+            <tr>
+          <th>Before/After Food</th>
+          <th>Medicine</th>
+          <th>Morning</th>
+          <th>Afternoon</th>
+          <th>Night</th>
+          {% comment %} <th><button class="add-medicine hide" type="button" id="addMedicine"><strong>+</strong></button></th> {% endcomment %}
+         </tr>
+        </thead>
+        
+          <tr class = "prescription-row">
+            <td>
+              
+              <!-- <select name="beforeAfter" id = "beforeAfter" class="form-control" placeholder="">
+              
+              <option id="beforeAfter" value = "{{ beforeAfter }}">{{ beforeAfter }}</option>
+              <option value = "">After</option></select> -->
+              <h6 name="beforeAfter" id = "beforeAfter" class="form-control">{{ MedBefAft }}</h6>
+            </td>
+            <td>
+              <h6 name="SelectedMed" id = "SelectedMed" class="form-control">{{ SelectedMed }}</h6>
+              {% comment %} <select name="SelectedMedicine" id="SelectedMedicine" class="form-control" placeholder="Select Medicine">
+                    <option value="{{ SelectedMed }}">{{ SelectedMed }}</option>
+              {% for prescMedicine in prescMedicines %}
+                    
+                    <option value="{{ prescMedicine.medicinename }}" >{{ prescMedicine.medicinename }}</option>
+                      
+              {% endfor %}
+              
+            </select>   {% endcomment %}
+           
+            </td>
+            <td>
+              <h6 name="morning" id = "morning" class="form-group">{{ MedMorn }}</h6>
+            </td>
+            <td>
+              <h6 name="afternoon" id = "afternoon" class="form-group">{{ medAft }}</h6>
+            </td>
+            <td>
+              <h6 name="night" id = "night" class="form-control">{{ medNight }}</h6>
+            </td>
+            <td>
+              {% comment %} <select name="SelectedSession" id="SelectedSession" class="form-control hide">
+                <option value="">Select dosage</option>
+          {% for prescTime in prescTimeOfDay %}
+                <option value="{{ prescTime.timeoftheday }}">{{ prescTime.timeoftheday }}</option>
+          {% endfor %}
+              </select> {% endcomment %}
+            </td>
+
+          </tr>
+          <tbody>
+          </tbody>
+        </table>
+        <div id="medicine-data">
+          <!-- Data will be displayed here -->
+        </div>
+          <div class="form-group" style = "margin-left: 70%;">
+            <label class="form-group" for = "noOfDays" style="color:rgb(0, 0, 0);display: inline; margin-left: 5px;">For </label>
+            {% comment %} <input name="noOfDays" type="text" class="form-group" placeholder="days"> {% endcomment %}
+            <h6 style = "display: inline; margin-left: 5px;">{{ noofdays }}</h6>
+            <label class="form-group" for = "noOfDays" style="color:rgb(0, 0, 0);display: inline; margin-left: 5px;">days </label>
+          </div>
+
+          
+          
+          <!-- <div class="form-group">
+              <label for="exampleFormControlTextarea1" style = "color:white">Please type the symptoms.</label>
+              <textarea name = "symptoms" class="form-control"  rows="5" placeholder="Symptoms"></textarea>
+          </div> -->
+          <br>
+        <!-- </form> -->
+        <!-- <form align="left" action="{% url 'doctorprofile' %}" method="post" style="margin-right:5%">
+            {% csrf_token %} -->
+          {% if request.session.writeNewPrescription %}
+          <div class="form-group" >
+    
+            <!-- <label  style="color:white">Please select a prescription from the dropdown.</label> -->
+            <!-- <div class="form-group">
+                <label for="exampleFormControlTextarea1">Please type the prescription.</label>
+                <textarea name = "prescription"style="text-align:center" class="form-control" id="exampleFormControlTextarea1" rows="3" placeholder="Prescription"></textarea>
+                <input type="hidden" name="prescriptionID" value="{{ prescription.id }}">
+            </div> -->
+            <!-- <select name="doctor" class="form-control" placeholder="Select Doctor">
+                {% for doctor in doctors %}
+                    <option value="{{ prescription.id }}">Dr. {{ doctor.id }}   ||   {{ doctor.specialization }} Specialist</option>
+                {% endfor %}
+            </select> -->
+    
+          </div>
+          <br>
+          <li class="dropdown-divider" style="margin-left:25%;margin-right:25%"></li>
+
+          {% comment %} <div class="form-group form-check hide">
+              <input type="checkbox" class="form-check-input" id="confirmCheck" >
+              <label class="form-check-label" ><span class="badge badge-success">CONFIRM</span></label>
+            </div>
+          <div class="hide" >
+            <!-- <button class="button first" id="generatePdfFile" align = "right" type ="submit" style="color:rgb(30, 126, 216); margin-left: 3%;" >Print/Save pdf</button> -->
+          <button id = "submit" type="submit" class="btn btn-warning first">Write Prescription</button>
+        </div> {% endcomment %}
+        {% endif %}
+        </form>
+    </div>
+      {% endif %}
+      {% endif %}
+      
+      
+      <script>
+        //function addNewMedicine(){
+          var med = document.getElementById('addnewmedicine'); // TextBox for Medicine Name And Bef Afr Food
+          var Addmed = document.getElementById('Addmed'); // Add New Medicine
+          console.log('log',  med.className);
+          Addmed.addEventListener("click", function () {
+          med.className = "hidein";
+          //if (med.className == "hidein"){
+          //  med.className = "hideout";
+          //};
+          });
+          //med.addEventListener("click", function () {
+          //  med.style.display = "block";
+          //});
+          var medsubmit = document.getElementById("medsubmit");
+          var closeaddmed = document.getElementById("closeaddmed");
+          medsubmit.addEventListener("click", function () {
+            med.className = "hideout";
+          });
+          closeaddmed.addEventListener("click", function () {
+            med.className = "hideout";
+          });
+        // };
+      </script>
+      <script>
+        
+        function sleep(milliseconds) {
+          const date = Date.now();
+          let currentDate = null;
+          do {
+            currentDate = Date.now();
+          } while (currentDate - date < milliseconds);
+        };
+        var pdfGnerated = false
+        var checkPdfSave = false
+        document.addEventListener('DOMContentLoaded', function () {
+          const confirmBox = document.getElementById("confirmCheck");
+          const pdfGenButton = document.getElementById("generatePdfFile");
+          confirmBox.addEventListener('click', function (event) {
+            var confirmUser = window.confirm("save as pdf?")
+            if (confirmUser) {
+              checkPdfSave = true;
+              console.log('check', checkPdfSave);
+              
+              $.ajax({
+                    type : 'POST',
+                    url : "{% url 'dummy' %}",
+                    data : {
+                  csrfmiddlewaretoken: '{{ csrf_token }}',
+                    }
+                        });
+                        pdfGenButton.click();
+                        console.log('check', checkPdfSave);
+            }
+            else {
+               checkPdfSave = false;
+               $.ajax("{% url 'dummy' %}", {
+                    method : "GET",
+                    data : {
+                  csrfmiddlewaretoken: '{{ csrf_token }}',
+                    }
+                  });
+                  console.log('check', checkPdfSave);
+                }
+              console.log('check', checkPdfSave);
+          });
+          
+        });
+        console.log('check', checkPdfSave);
+        document.addEventListener('DOMContentLoaded', function () {
+          const form = document.getElementById("prescriptionForm");
+          const submitbutton = document.getElementById("submit");
+          const pdfGenButton = document.getElementById("generatePdfFile");
+          // if (checkPdfSave == true) {
+            
+          form.addEventListener('submit', function (event) {
+          
+            console.log('check', checkPdfSave);
+
+           if (checkPdfSave ==  true) {
+            const confirmMessage = "Do you want to send a pdf of this prescription to the Patient ?"
+            var userConfirmed = window.confirm(confirmMessage);
+            
+                if (userConfirmed == true) {
+                  $.ajax({
+                    type : 'POST',
+                    url : "{% url 'dummy' %}",
+                    data : {
+                  csrfmiddlewaretoken: '{{ csrf_token }}',
+                    }
+                        });
+                  submitbutton.click();
+                  
+                } 
+                else {
+                  $.ajax("{% url 'dummy' %}", {
+                    method : "GET",
+                    data : {
+                  csrfmiddlewaretoken: '{{ csrf_token }}',
+                    }
+                  });
+                  submitbutton.click();
+                  }
+            }
+            // else {
+            //   $.ajax("{% url 'dummy' %}", {
+            //      method : "GET",
+            //      data : {
+            //   csrfmiddlewaretoken: '{{ csrf_token }}',
+            //     }
+            //    });
+             //   submitbutton.click();
+            // }
+          });
+        
+        });
+      
+        //})
+        document.addEventListener("DOMContentLoaded", function() {
+          var prescriptiontable = document.getElementById("addPrescription");
+          var newmedicineRow = document.getElementById("addMedicine");
+          newmedicineRow.addEventListener("click", function() {
+            var newRow = prescriptiontable.querySelector(".prescription-row").cloneNode(true);
+            var newElements = newRow.querySelectorAll('h6 , select');
+            newElements.forEach(function(element) {
+              element.value = '';
+              //element.textContent = '';
+            });
+            // newRow.querySelector("#SelectedMedicine").value = "";
+            // newRow.querySelector("#beforeAfter").textContent = "";
+            // newRow.querySelector("#morning").textContent = "";
+            // newRow.querySelector("#afternoon").textContent = "";
+            // newRow.querySelector("#night").textContent = "";
+            prescriptiontable.appendChild(newRow);
+            
+            var medicineSelect = newRow.querySelector('select[name="SelectedMedicine"]');
+            medicineSelect.addEventListener('change', function(){
+              var selectedMedicineValue = medicineSelect.value;
+              console.log("selected Medicine Value: ", selectedMedicineValue);
+              fetch(`addingMedicineData/${selectedMedicineValue}`)
+              .then(response=> response.json())
+              .then(data=> {
+              //newRow.querySelector('h6[name = "morning"]').textContent = data.MedMorn
+              //newRow.querySelector('h6[name = "afternoon"]').textContent = data.medAft
+              //newRow.querySelector('h6[name = "night"]').textContent = data.medNight
+              newRow.querySelector('h6[name = "beforeAfter"]').textContent = data.MedBefAft
+            });
+            });
+            var prescriptionsession = newRow.querySelector("select[name='SelectedSession']");
+          prescriptionsession.addEventListener('change', function(){
+          var SelectedSessionValue = prescriptionsession.value;
+          console.log("session log: ", SelectedSessionValue);
+           fetch(`addingSessionData/${SelectedSessionValue}`)
+           .then(response=> response.json())
+           .then(data=>{
+            newRow.querySelector('h6[name = "morning"]').textContent = data.MedMorn
+            newRow.querySelector('h6[name = "afternoon"]').textContent = data.medAft
+            newRow.querySelector('h6[name = "night"]').textContent = data.medNight    
+           }); 
+        });
+          });
+        });
+        
+    
+    
+    
+        $('#generatePdfFile').click(function() {
+            var pdfGenerator = $(this).val();
+            //confUser = window.confirm("save as pdf?");
+           // if (confUser) {
+            $.ajax({
+              method: 'GET',
+              url : '{% url "generatePDF" %}',
+              data : {'pdfGenerator' : pdfGenerator},
+              dataType : 'json',
+              success : function(data) {
+                pdfGnerated = true            
+              },
+              error : function(xhr, status, error) {
+                console.error(xhr.responseText)
+              }
+            })
+            sleep(2000);
+          //}
+          })
+        
+          
+          
+        
+          $('#selectedPatient').change(function() {
+            var PatientSelected = $(this).val();
+            // var encodedName = encodeURIComponent(PatientSelected);
+            $.ajax({
+              method: 'GET',
+              url : '{% url "doctorprofile" %}',
+              data : {'SelectedPat' : PatientSelected},
+              dataType : 'json',
+              success : function(data) {
+                $('#patientSex').html(data.patientSex);
+                $('#patientAge').html(data.patientAge);
+                // $('#afternoon').html(data.medAft);
+                // $('#night').html(data.medNight);
+                //$('#medicine-data').html(
+                  //    'BeforeAfter: ' +  data.MedBefAft +
+                    //  '<br> Morning: ' + data.MedMorn +
+                      //'<br> Afternoon: ' + data.medAft +
+                      //'<br> Night: ' + data.medNight
+                  
+              },
+              error : function(xhr, status, error) {
+                console.error(xhr.responseText)
+              }
+              
+            });
+          });
+
+          $('#SelectedMedicine').change(function() {
+            var MedicineSelected = $(this).val();
+            $.ajax({
+              method: 'GET',
+              url : '{% url "doctorprofile" %}',
+              data : {'SelectedMed' : encodeURIComponent(MedicineSelected)},
+              dataType : 'json',
+              success : function(data) {
+                $('#beforeAfter').html(data.MedBefAft);
+                //$('#medicine-data').html(
+                  //    'BeforeAfter: ' +  data.MedBefAft +
+                    //  '<br> Morning: ' + data.MedMorn +
+                      //'<br> Afternoon: ' + data.medAft +
+                      //'<br> Night: ' + data.medNight
+                  
+              },
+              error : function(xhr, status, error) {
+                console.error(xhr.responseText)
+              }
+              
+            });
+          });
+
+          $('#SelectedSession').change(function() {
+            var SessionSelected = $(this).val();
+            $.ajax({
+              method: 'GET',
+              csrfmiddlewaretoken: '{{ csrf_token }}',
+              url : '{% url "doctorprofile" %}',
+              data : {'SelectedSess' : encodeURIComponent(SessionSelected)},
+              dataType : 'json',
+              success : function(data) {
+                $('#morning').html(data.MedMorn);
+                $('#afternoon').html(data.medAft);
+                $('#night').html(data.medNight);
+                //$('#medicine-data').html(
+                  //    'BeforeAfter: ' +  data.MedBefAft +
+                    //  '<br> Morning: ' + data.MedMorn +
+                      //'<br> Afternoon: ' + data.medAft +
+                      //'<br> Night: ' + data.medNight
+                  
+              },
+              error : function(xhr, status, error) {
+                console.error(xhr.responseText)
+              }
+              
+            });
+          });
+        
+      </script>
+      {% endblock %}

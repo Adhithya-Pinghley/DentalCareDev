@@ -41,6 +41,7 @@ urlpatterns = [
     path('searchMedicine', views.searchMedicine, name = 'searchMedicine'),
     path('updateExcel', views.updateExcel, name = 'updateExcel'),
     path('uploadExcel', views.uploadExcel, name = 'uploadExcel'),
+    path('countPrescriptionRows', views.countPrescriptionRows, name = 'countPrescriptionRows')
 ]
 
 # from django.urls import path

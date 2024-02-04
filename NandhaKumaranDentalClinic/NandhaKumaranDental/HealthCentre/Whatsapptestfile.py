@@ -1,5 +1,6 @@
 from WPP_Whatsapp import Create, PlaywrightSafeThread, Whatsapp
 from django.conf import Settings
+import time
 # if __name__ == '__main__':
     # from .views import catchgenqr
 # import psutil
@@ -51,6 +52,7 @@ class openWhatsapp():
             raise Exception(creator.state)
         
         # return client
+        time.sleep(1)
         client.close()
 
 def whatsappApi(patientName, doctorName, whatsappNumber, time, date):
@@ -66,6 +68,7 @@ def whatsappApi(patientName, doctorName, whatsappNumber, time, date):
     sessStart = Sesscreator.start()
     dumSess = sessStart.session
     result = sessStart.sendText(phone_number, message)
+    time.sleep(1)
     sessStart.close()
     
 def whatsappApiDoc(doctorName, whatsappNumber, time, date):
@@ -81,6 +84,7 @@ def whatsappApiDoc(doctorName, whatsappNumber, time, date):
     sessStart = Sesscreator.start()
     dumSess = sessStart.session
     result = sessStart.sendText(phone_number, message)
+    time.sleep(1)
     sessStart.close()
 
 def whatsappApiEdit(patientName, doctorName, whatsappNumber, time, date):
@@ -96,16 +100,24 @@ def whatsappApiEdit(patientName, doctorName, whatsappNumber, time, date):
     sessStart = Sesscreator.start()
     dumSess = sessStart.session
     result = sessStart.sendText(phone_number, message)
+    time.sleep(1)
     sessStart.close()
     
-def whatsappMedia(whatsappNumber, pdfPathForWP):
+def whatsappMedia(whatsappNumber, pdfPathForWP, docName, patientName, prescDate):
     from .views import catchgenqr
     phone_number = f"+91{whatsappNumber}"
     path = pdfPathForWP
-    name = "dummy"
-    caption = "Dummy"
+    name = patientName
+    caption = prescDate
     global client
-    result = client.sendFile(phone_number, path, name, caption )
+    Sesscreator = Create(session=docName, catchQR= catchgenqr, logQR= True)
+    sess = Sesscreator.session
+    global client
+    sessStart = Sesscreator.start()
+    dumSess = sessStart.session
+    result = sessStart.sendFile(phone_number, path, name, caption )
+    time.sleep(1)
+    sessStart.close()
     # message = openWhatsapp.client.sendMessageOptions()
 
 

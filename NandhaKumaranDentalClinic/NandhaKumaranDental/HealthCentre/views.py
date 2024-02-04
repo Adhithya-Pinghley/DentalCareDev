@@ -6,7 +6,7 @@ from .models import Doctor, Patient, Prescription, passwordHasher, emailHasher, 
 from django.db.models import Count, Q
 from django.contrib.auth.decorators import login_required
 from .forms import AppointmentSet, AppointmentSetForm, AppointmentForm
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, date
 import time
 from django.utils import timezone
 from django.shortcuts import render
@@ -21,12 +21,14 @@ import zipfile
 from django.conf import Settings
 from WPP_Whatsapp import Create, PlaywrightSafeThread
 from weasyprint import HTML, CSS
-from django.template.loader import get_template
+import pdfkit
+from django.template.loader import render_to_string, get_template
+from jinja2 import Template
 if ('runserver' in sys.argv):
     from .Whatsapptestfile import whatsappApi, openWhatsapp, whatsappApiEdit, whatsappMedia, whatsappApiDoc
     # import Whatsapptestfile
 
-
+renderedHTML = " "
 def updateExcel(request):
     # while True:
         xlPath = os.curdir #"D:\Dental-Software-Backup\Dental-Software"
@@ -836,6 +838,8 @@ def deleteappointment(request, pk):
     response = response = HttpResponseRedirect(reverse('doctorappointmentsfalse'))
     return responseHeadersModifier(response)
 
+rowCount = 0
+additionalRowData ={}
 selectedMedicineID = []
 selectedSessionID = []
 def createNewMedicine(request):
@@ -851,20 +855,40 @@ def createNewMedicine(request):
 def addingSessionData(request, SelectedSessionValue):
     try:
         SelectedSession = timeofday.objects.get(timeoftheday = SelectedSessionValue)
+        request.session['selectedSession'] = SelectedSessionValue
         SelectedMorning = SelectedSessionValue[0]
         SelectedAfternoon = SelectedSessionValue[3]
         SelectedNight = SelectedSessionValue[6]
         sessionID = SelectedSession.pk
         selectedSessionID.append(sessionID)
+        request.session['sessionIsSelected'] = True
+        request.session['clickedOnAddRow'] = True
+        if request.session['medicineIsSelected'] == True:
+            clickedOnAddRow = True
+            medicineIsSelected = True
+            sessionIsSelected = True
         data = {
-                    # "MedBefAft" : SelectedBeforeAfter,
                     "MedMorn" : SelectedMorning,
                     "medAft"   : SelectedAfternoon,
                     "medNight" : SelectedNight,
-                    # "patients" : Patient.objects.all().order_by('id'),
-                    # "prescPatients" : Prescription.objects.all().order_by('id'),
-                    # "prescMedicines" : Medicine.objects.all().order_by('MedicineName')
+                    'clickedOnAddRow' : clickedOnAddRow,
+                    'medicineIsSelected' : medicineIsSelected,
+                    'sessionIsSelected' : sessionIsSelected
                 }
+        request.session['additionalSession_data'] = data
+        global additionalRowData
+        addedData = request.session.get('additionalMedicine_data', {})
+        addedData.update(data)
+        for i in range(int(rowCount)):
+            addingData = {
+                f'MedBefAft{i+1}' : addedData.get('MedBefAft'),
+                f'SelectedMed{i+1}': addedData.get('SelectedMed'),
+                f'MedMorn{i+1}': addedData.get('MedMorn'),
+                f'medAft{i+1}': addedData.get('medAft'),
+                f'medNight{i+1}' : addedData.get('medNight')
+            }
+        additionalRowData.update(addingData)
+        
         return JsonResponse(data)
             # response = render(request, "HealthCentre/NewPrescription.html", data)
             # return responseHeadersModifier(response)
@@ -872,7 +896,7 @@ def addingSessionData(request, SelectedSessionValue):
         return JsonResponse({'error': 'Session not found'}, status=404)
 
 def addingMedicineData(request, selectedMedicineValue):
-
+        global rowCount
         try:
             SelectedMedicine = Medicine.objects.get(medicinename = selectedMedicineValue)
             
@@ -884,11 +908,16 @@ def addingMedicineData(request, selectedMedicineValue):
             medicineID = SelectedMedicine.pk
             
             selectedMedicineID.append(medicineID)
-            
+            request.session['medicineIsSelected'] = True
+            request.session['clickedOnAddRow'] = True
             # prescription = Prescription.objects.get(id= getPrescriptionID)
             # prescription.medicine.add(medicineID)
             data = {
                 "MedBefAft" : SelectedBeforeAfter,
+                "SelectedMed" : selectedMedicineValue,
+                'clickedOnAddRow' : True,
+                'medicineIsSelected' : True,
+                
                 # "MedMorn" : SelectedMorning,
                 # "medAft"   : SelectedAfternoon,
                 # "medNight" : SelectedNight,
@@ -896,6 +925,8 @@ def addingMedicineData(request, selectedMedicineValue):
                 # "prescPatients" : Prescription.objects.all().order_by('id'),
                 # "prescMedicines" : Medicine.objects.all().order_by('MedicineName')
             }
+            request.session['additionalMedicine_data'] = data
+            
             return JsonResponse(data)
             # response = render(request, "HealthCentre/NewPrescription.html", data)
             # return responseHeadersModifier(response)
@@ -919,14 +950,20 @@ def doctorprofile(request):
     #  selectedMedicineValue = ""
      if request.method == 'GET':
         request.session['writeNewPrescription'] = True
-
-        if request.GET.get('SelectedMed') == None and request.GET.get('SelectedPat') == None and request.GET.get('SelectedSess') == None:
+        
+        if request.GET.get('noofdays') == None and request.GET.get('SelectedMed') == None and request.GET.get('SelectedPat') == None and request.GET.get('SelectedSess') == None:
             doctorSpecific = Patient.objects.filter(doctorname = request.session['Name']).order_by('name')
+            clickedOnAddRow = True
+            medicineIsSelected = True
+            sessionIsSelected = True
             context = {
                     "patients" : doctorSpecific, #Patient.objects.all().order_by('id'),
                     # "prescPatients" : Prescription.objects.all().order_by('id'),
                     "prescMedicines" : Medicine.objects.all().order_by('medicinename'),
-                    "prescTimeOfDay" : timeofday.objects.all().order_by('id')
+                    "prescTimeOfDay" : timeofday.objects.all().order_by('id'),
+                    'clickedOnAddRow' : clickedOnAddRow,
+                    'medicineIsSelected' : medicineIsSelected,
+                    'sessionIsSelected' : sessionIsSelected
                     }
             response = render(request, "HealthCentre/NewPrescription.html", context)
             return responseHeadersModifier(response)
@@ -935,15 +972,18 @@ def doctorprofile(request):
             try: 
                 selectedPatient = Patient.objects.get(name = PatientName)
                 data = {
+                    "patientName": selectedPatient.name,
                     "patientSex" : selectedPatient.passwordHash,
                     "patientAge" : selectedPatient.rollNumber
                 }
+                request.session['pdf_data'] = data
                 return JsonResponse(data)
             except Patient.DoesNotExist:
                 return JsonResponse({'error': 'Patient not found'}, status=404)
             
         if request.GET.get('SelectedSess') != None and request.method == 'GET':
             SesssionTime = request.GET.get('SelectedSess', None)
+            
             try:
                 SelectedSession = timeofday.objects.get(timeoftheday = SesssionTime)
                 sessionID = SelectedSession.pk
@@ -956,6 +996,10 @@ def doctorprofile(request):
                         "medAft"   : SelectedAfternoon,
                         "medNight" : SelectedNight,
                     }
+                request.session['pdf_sess_data'] = data
+                # global renderedHTML
+                # # renderedHTMLbuffer = renderedHTML
+                # renderedHTML = render_to_string('NewPrescription.html', data)
                 return JsonResponse(data)
             except timeofday.DoesNotExist:
                 return JsonResponse({'error': 'Session not found'}, status=404)
@@ -972,14 +1016,29 @@ def doctorprofile(request):
                 SelectedBeforeAfter = SelectedMedicine.beforeafter
                 data = {
                     "MedBefAft" : SelectedBeforeAfter,
+                    "SelectedMed" : SelectedMedicine.medicinename,
                     # "MedMorn" : SelectedMorning,
                     # "medAft"   : SelectedAfternoon,
                     # "medNight" : SelectedNight,
                 }
+                request.session['pdf_med_data'] = data
+                # global renderedHTML
+                # # renderedHTMLbuffer = renderedHTML
+                # renderedHTML = render_to_string('NewPrescription.html', data)
                 return JsonResponse(data)
             except Medicine.DoesNotExist:
                 return JsonResponse({'error': 'Medicine not found'}, status=404)
             
+        if request.GET.get('noofdays') != None and request.method == 'GET':
+            noofdays = request.GET.get('noofdays', None)
+            try:
+                data = {
+                    "noofdays" : noofdays
+                }
+                request.session['pdf_days_data'] = data
+                return JsonResponse(data)
+            except:
+                return JsonResponse({'error': 'none value returned'}, status=404)
      if request.method == 'POST':
         
         if request.session['writeNewPrescription']:
@@ -1015,11 +1074,19 @@ def doctorprofile(request):
                 prescription.MornAftNight.set(selectedSessions)
                 wpnumber = patientObj.contactNumber
                 doctorSpecific = Prescription.objects.filter(prescribingDoctor = request.session['Name']).order_by('timestamp')
+                docName = request.session['Name']
+                Todaysdate = date.today()
                 global dummyBoolean
                 if dummyBoolean == True:
-                    sendPdfinWhatsapp(wpnumber)
+                    sendPdfinWhatsapp(wpnumber, docName, prescpatient, Todaysdate)
+                clickedOnAddRow = True
+                medicineIsSelected = True
+                sessionIsSelected = True
             context = {
-                    "prescriptions" : doctorSpecific
+                    "prescriptions" : doctorSpecific,
+                    'clickedOnAddRow' : clickedOnAddRow,
+                    'medicineIsSelected' : medicineIsSelected,
+                    'sessionIsSelected' : sessionIsSelected
                 }
         response = render(request, "HealthCentre/prescriptionportal.html", context)
         return responseHeadersModifier(response)
@@ -1233,6 +1300,9 @@ def requestSessionInitializedChecker(request):
         request.session['appointmentEdit'] = False
         request.session['patientMedEdit'] = False  
         request.session['medicineEdit'] = False 
+        request.session['clickedOnAddRow'] = False
+        request.session['medicineIsSelected'] = False
+        request.session['sessionIsSelected'] = False
         # request.session['patientMedicineEdit'] = False
         dummyBoolean = False
  
@@ -1454,23 +1524,83 @@ def searchPrescriptions(request):
             response = response = HttpResponseRedirect(reverse('login'))
             return responseHeadersModifier(response)
 
+
+
+def countPrescriptionRows(request):
+    if request.method == 'GET':
+       clickedOnAddRow = False
+       medicineIsSelected = False
+       sessionIsSelected = False
+       request.session['medicineIsSelected'] = False
+       global rowCount
+       rowCount += 1
+       
+       data = {
+           'rowCOunt' : rowCount,
+           'clickedOnAddRow' : clickedOnAddRow,
+           'medicineIsSelected' : medicineIsSelected,
+           'sessionIsSelected' : sessionIsSelected
+       }
+       return JsonResponse(data)
+
 def generatePDF(request):
 
     if request.method == "GET":
+        global rowCount
+        global additionalRowData
         pyautogui.hotkey('ctrl', 'p')
         # prescriptionTemplate = (get_template("HealthCentre/NewPrescription.html"))
-        prescPDF = HTML(filename=r'NandhaKumaranDentalClinic\NandhaKumaranDental\HealthCentre\templates\HealthCentre\NewPrescription.html').write_pdf('D:\DentalCareDev\prescPDF\mentPDF.pdf')
-        #.write_pdf('D:\DentalCareDev\prescPDF\mentPDF.pdf')
-    # time.sleep(60)
+        addedData = request.session.get('additionalSession_data', {})
+        addedData2 = request.session.get('additionalMedicine_data', {})
+        addedData.update(addedData2)
+        allAddData = {}
+        allAddData.update(additionalRowData)
+        newRowdata = allAddData
+        request.session['newRowData'] = newRowdata
+        data = request.session.get('pdf_data' , {}) #+ 'pdf_sess_data' + 'pdf_med_data'
+        data1 = request.session.get('pdf_sess_data' , {})
+        data2 = request.session.get('pdf_med_data' , {})
+        data3 = request.session.get('pdf_days_data' , {})
+        data4 = request.session.get('newRowData', {})
+        data.update(data1)
+        data.update(data2)
+        data.update(data3)
+        data.update(data4)
+        patientName = data.get("patientName")
+        currentDate = date.today() 
+        renderedHTML = render_to_string(r'HealthCentre\NewPrescriptionforRendering.html',data, request)
+        
+        additionalRows = ''
+        for i in range(int(rowCount)):
+            additionalRows += f'''<tr class = "prescription-row"><td><h6 name="beforeAfter" id = "beforeAfter" class="form-control">{ data4.get(f'MedBefAft{i+1}')} </h6></td>
+            <td>
+              <h6 name="SelectedMed" id = "SelectedMed" class="form-control">{ data4.get(f'SelectedMed{i+1}') }</h6>
+            </td>
+            <td>
+              <h6 name="morning" id = "morning" class="form-group">{ data4.get(f'MedMorn{i+1}') }</h6>
+            </td>
+            <td>
+              <h6 name="afternoon" id = "afternoon" class="form-group">{ data4.get(f'medAft{i+1}') }</h6>
+            </td>
+            <td>
+              <h6 name="night" id = "night" class="form-control">{ data4.get(f'medNight{i+1}')}</h6>
+            </td>
+            <td>
+            </td>
+          </tr>'''
+        renderedHTML = renderedHTML.replace("<tbody>\n          </tbody>\n", f'<tbody>{additionalRows}</tbody>')
+        renderedfile = pdfkit.from_string(renderedHTML,f'E:\Adhithya\dental-software\DentalCareDev\prescPDF\{patientName}_{currentDate}.pdf', options={"enable-local-file-access": None})
+        rowCount = 0
     return HttpResponseRedirect(reverse("doctorprofile"))
 
-def sendPdfinWhatsapp(wpnumber):
+def sendPdfinWhatsapp(wpnumber, docName, patientname, curDate):
 
     curPath = os.getcwd() #"D:\prescPDF"
     pdfPath = os.path.join(curPath, "prescPDF")
     allFilesInPath = os.listdir(pdfPath)
     # filesInPath = [allfiles for allfiles in allFilesInPath if allfiles.lower().startswith('prescPDF')]
     # if filesInPath:
+    doctorName = docName
     PdfFilesInPath = [file for file in allFilesInPath if file.lower().endswith('.pdf')]
     
     if not PdfFilesInPath:
@@ -1479,7 +1609,7 @@ def sendPdfinWhatsapp(wpnumber):
         pdfFullPaths = [os.path.join(pdfPath, pdfFile)  for pdfFile in PdfFilesInPath] 
         latestPdf = max(pdfFullPaths, key=os.path.getmtime)
     
-    whatsappMedia(wpnumber, latestPdf)
+    whatsappMedia(wpnumber, latestPdf, doctorName, patientname, curDate)
 
 def patMed(request):
     request.session['patientMedEdit'] = False
@@ -1506,11 +1636,11 @@ def editPatientMed(request,pk):
         patientObject.email = request.POST['userEmail']
         patientObject.rollNumber = request.POST['userRollNo']
         patientObject.passwordHash = request.POST['userPassword']
-
+        doctorSpecific = Patient.objects.filter(doctorname = request.session['Name']).order_by('name')
         patientObject.save()   
         context = {
-               "editPat" : Patient.objects.all(),
-               "editMedicine" : Medicine.objects.all(),
+               "editPat" : doctorSpecific,
+               "editMedicine" : Medicine.objects.all().order_by('medicinename'),
              }
         response = HttpResponseRedirect(reverse('patMed'))
         return responseHeadersModifier(response)
@@ -1520,14 +1650,15 @@ def editPatientMed(request,pk):
     patientAddr = patientObj.address
     patientContact = patientObj.contactNumber
     patientEmail = patientObj.email
-    patientRoll = patientObj.rollNumber        
+    patientRoll = patientObj.rollNumber   
+    doctorSpecific = Patient.objects.filter(doctorname = request.session['Name']).order_by('name')     
     context= {
         "userFirstNam" :patientName,
         "userAddress" : patientAddr,
         "userContactNo" : patientContact,
         "userEmail" : patientEmail,
         "userRollNo" : patientRoll,
-        "editPat" : Patient.objects.all(),
+        "editPat" : doctorSpecific,
         "editMedicine" : Medicine.objects.all(),
 
     }
@@ -1538,12 +1669,12 @@ def deletepatientDetails(request, pk):
     request.session['deletepatientDetails'] = True
     delpatObj = Patient.objects.get(id=pk)
     delpatObj.delete()
-    
+    doctorSpecific = Patient.objects.filter(doctorname = request.session['Name']).order_by('name')
     context = {
     
     "delpatObj" : delpatObj,
-     "editPat" : Patient.objects.all(),
-    "editMedicine" : Medicine.objects.all(),
+     "editPat" : doctorSpecific,
+    "editMedicine" : Medicine.objects.all().order_by('medicinename'),
         }
     response = response = HttpResponseRedirect(reverse('patMed'))
     return responseHeadersModifier(response)
@@ -1556,12 +1687,14 @@ def medicineEdit(request,pk):
         medicineObject = Medicine.objects.get(id=pk)
         medicineObject.medicinename = request.POST['patientMed']
         medicineObject.beforeafter = request.POST['beforeAfter']
-        
-
+        medicineObject.morning = '1'
+        medicineObject.afternoon = '1'
+        medicineObject.night = '1'
+        doctorSpecific = Patient.objects.filter(doctorname = request.session['Name']).order_by('name')
         medicineObject.save()   
         context = {
-                "editPat" : Patient.objects.all().order_by('name'),
-               "editMedicine" : Medicine.objects.all().order_by('name'),
+                "editPat" : doctorSpecific,
+               "editMedicine" : Medicine.objects.all().order_by('medicinename'),
              }
         response = HttpResponseRedirect(reverse('patMed'))
         return responseHeadersModifier(response)
@@ -1569,12 +1702,12 @@ def medicineEdit(request,pk):
     medicineObj = Medicine.objects.get(id=pk)
     medicineName = medicineObj.medicinename    
     befAftr = medicineObj.beforeafter
-          
+    doctorSpecific = Patient.objects.filter(doctorname = request.session['Name']).order_by('name')
     context= {
        "medicineName" : medicineName,
        "befAftr" : befAftr,
-        "editPat" : Patient.objects.all(),
-        "editMedicine" : Medicine.objects.all(),
+        "editPat" : doctorSpecific,
+        "editMedicine" : Medicine.objects.all().order_by('medicinename'),
 
     }
     response = render(request, "HealthCentre/medicinePatientPortal.html", context)
@@ -1584,12 +1717,13 @@ def deletemedicineDetails(request, pk):
     request.session['deletemedicineDetails'] = True
     delmedObj = Medicine.objects.get(id=pk)
     delmedObj.delete()
+    doctorSpecific = Patient.objects.filter(doctorname = request.session['Name']).order_by('name')
     
     context = {
     
     "delmedObj" : delmedObj,
-     "editPat" : Patient.objects.all(),
-    "editMedicine" : Medicine.objects.all(),
+     "editPat" : doctorSpecific,
+    "editMedicine" : Medicine.objects.all().order_by('medicinename'),
         }
     response = response = HttpResponseRedirect(reverse('patMed'))
     return responseHeadersModifier(response)
@@ -1607,7 +1741,8 @@ def searchPatients(request):
                                                                 Q(address__icontains = searchQuery) |
                                                                 Q(contactNumber__icontains = searchQuery) |
                                                                 Q(email__icontains = searchQuery) |
-                                                                Q(rollNumber__icontains = searchQuery))
+                                                                Q(rollNumber__icontains = searchQuery)|
+                                                                Q(doctorname__icontains = request.session['Name']))
             context = {
                 'editPat' : searchFilterPatients.order_by('name'),
                 "editMedicine" : Medicine.objects.all(),
@@ -1629,19 +1764,20 @@ def searchMedicine(request):
         return responseHeadersModifier(response)
     if request.method == 'POST':
         searchQuery = request.POST["searchQuery"]
+        doctorSpecific = Patient.objects.filter(doctorname = request.session['Name']).order_by('name')
         if searchQuery != '':
 
             searchFilterMedicine = Medicine.objects.filter(Q(medicinename__icontains = searchQuery) |
                                                                 Q(beforeafter__icontains = searchQuery))
             context = {
                 'editMedicine' : searchFilterMedicine.order_by('medicinename'),
-                "editPat" : Patient.objects.all(),
+                "editPat" : doctorSpecific,
             }
 
             response = render(request, "HealthCentre/medicinePatientPortal.html", context)
             return responseHeadersModifier(response)
         else:
-            response = response = HttpResponseRedirect(reverse('patMed'))
+            response = HttpResponseRedirect(reverse('patMed'))
             return responseHeadersModifier(response)        
     
 
