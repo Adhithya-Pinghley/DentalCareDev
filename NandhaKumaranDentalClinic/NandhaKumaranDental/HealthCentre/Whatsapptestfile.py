@@ -61,11 +61,11 @@ class openWhatsapp():
         time.sleep(10)
         client.close()
 
-def whatsappApi(patientName, doctorName, whatsappNumber, time, date):
+def whatsappApi(patientName, doctorName, whatsappNumber, time_, date):
     # reclient= openWhatsapp.client
     from .views import catchgenqr
     phone_number = f"+91{whatsappNumber}" #phone_number = "+917904427507"  # or "+201016708170"
-    message = f"Dear {patientName}, This is Dr.{doctorName}, from XYZ Clinic. Your Appointment is fixed at {time} on {date}. Please do not forget your prescription!! Thanks!!"
+    message = f"Dear {patientName}, This is Dr.{doctorName}, from XYZ Clinic. Your Appointment is fixed at {time_} on {date}. Please do not forget your prescription!! Thanks!!"
     # global client
     # result = client.sendText(phone_number, message)
     Sesscreator = Create(session=doctorName, catchQR= catchgenqr, logQR= True)
@@ -77,10 +77,10 @@ def whatsappApi(patientName, doctorName, whatsappNumber, time, date):
     time.sleep(10)
     sessStart.close()
     
-def whatsappApiDoc(doctorName, whatsappNumber, time, date):
+def whatsappApiDoc(doctorName, whatsappNumber, time_, date):
     from .views import catchgenqr
     phone_number = f"+91{whatsappNumber}" #phone_number = "+917904427507"  # or "+201016708170"
-    message = f"Dear {doctorName}, You have an appointment fixed at {time} on {date}. Thanks!!"
+    message = f"Dear {doctorName}, You have an appointment fixed at {time_} on {date}. Thanks!!"
     # global client
     # # Simple message
     # result = client.sendText(phone_number, message)
@@ -93,11 +93,11 @@ def whatsappApiDoc(doctorName, whatsappNumber, time, date):
     time.sleep(1)
     sessStart.close()
 
-def whatsappApiEdit(patientName, doctorName, whatsappNumber, time, date):
+def whatsappApiEdit(patientName, doctorName, whatsappNumber, time_, date):
     # reclient= openWhatsapp.client
     from .views import catchgenqr
     phone_number = f"+91{whatsappNumber}" #phone_number = "+917904427507"  # or "+201016708170"
-    message = f"Dear {patientName}, This is Dr.{doctorName}, from xyz Clinic. Your Appointment has been changed to {time} on {date}. Please do not forget your prescription!! Thanks!!"
+    message = f"Dear {patientName}, This is Dr.{doctorName}, from xyz Clinic. Your Appointment has been changed to {time_} on {date}. Please do not forget your prescription!! Thanks!!"
     global creator
     
     Sesscreator = Create(session=doctorName, catchQR= catchgenqr, logQR= True)
