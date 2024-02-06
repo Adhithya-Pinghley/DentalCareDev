@@ -5,22 +5,28 @@ from django.utils import timezone
 
 
 class Doctor(models.Model):
-    name = models.CharField(max_length = 30)
-    address = models.CharField(max_length = 100)
-    contactNumber = models.CharField(unique = True, max_length = 10)
+    name = models.CharField(unique = True, max_length = 30, blank = False, null = False)
+    address = models.CharField(max_length = 2000)
+    contactNumber = models.CharField(unique = True, max_length = 10, blank = False, null = False)
     email = models.EmailField(unique = True, max_length = 255)
     specialization = models.CharField(max_length = 100)
     passwordHash = models.CharField(max_length = 64)
     emailHash = models.CharField(max_length = 64)
+    educationalQualification = models.CharField(max_length = 100)
+    clinicName = models.CharField( max_length = 200)
 
     def __str__(self):
-        return "Name : " + self.name + " Address : " + self.address + " Contact : " + self.contactNumber + " Email : " + self.email + " Specialization : " + self.specialization
+        return "Name : " + self.name + " Address : " + self.address + " Contact : " + self.contactNumber + " Email : " + self.email + " Specialization : " + self.specialization + "educationalQualification" + self.educationalQualification + "clinicName" + self.clinicName
     class Meta:
         db_table = 'healthcentre_doctor'
 
+class doctorlogo(models.Model):
+    doctorid = models.ForeignKey(Doctor, related_name = "docid", on_delete = models.CASCADE, db_column = 'doctorid')
+    docname = models.CharField(max_length = 100)
+    logo = models.ImageField(upload_to=r'NandhaKumaranDentalClinic\NandhaKumaranDental\HealthCentre\static\HealthCentre\images', null=True, blank=True)
 class Patient(models.Model):
-    name = models.CharField(unique = True, max_length = 30)
-    address = models.CharField(max_length = 100)
+    name = models.CharField(max_length = 30)
+    address = models.CharField(max_length = 2000)
     contactNumber = models.CharField(max_length = 10, db_column = 'contactnumber')
     email = models.EmailField(max_length = 255, null= True, blank= True)
     rollNumber = models.CharField(max_length = 8, db_column = 'rollnumber') 

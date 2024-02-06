@@ -28,6 +28,7 @@ ALLOWED_HOSTS = ['*', 'https://b0da-117-254-39-203.ngrok-free.app']
 
 globalVar = ""
 globalDocName = ""
+wpIsConnected = False
 # Application definition
 
 CSRF_TRUSTED_ORIGINS = ['https://b0da-117-254-39-203.ngrok-free.app']

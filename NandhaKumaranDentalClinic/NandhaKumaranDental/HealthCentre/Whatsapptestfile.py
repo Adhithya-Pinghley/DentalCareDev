@@ -1,6 +1,7 @@
 from WPP_Whatsapp import Create, PlaywrightSafeThread, Whatsapp
 from django.conf import Settings
 import time
+from concurrent import futures
 # if __name__ == '__main__':
     # from .views import catchgenqr
 # import psutil
@@ -31,7 +32,7 @@ def catchqr(qrCode: str , asciiQR: str , attempt: int, urlCode: str):
 
 creator = ""
 client = ""
-
+# wpIsConnected = False
 class openWhatsapp():
         # start client with your session name
      
@@ -41,18 +42,23 @@ class openWhatsapp():
         global creator
         creator = Create(session=your_session_name, catchQR= catchgenqr , logQR= True) #catchgenqr
         Settings.globalVar = creator
+        Settings.wpIsConnected = False
         global client
         client = creator.start()
-        
-        
+        # global wpIsConnected
+        # if client.__needsToScan():
+        #     wpIsConnected = False
     # Now scan Whatsapp Qrcode in browser
     # check state of login
         if creator.state != 'CONNECTED':
         
             raise Exception(creator.state)
-        
+        if creator.state == 'CONNECTED' and (creator.session == DocName):
+            
+            # request.session['wpStatus'] = True
+            Settings.wpIsConnected = True
         # return client
-        time.sleep(1)
+        time.sleep(10)
         client.close()
 
 def whatsappApi(patientName, doctorName, whatsappNumber, time, date):
@@ -68,7 +74,7 @@ def whatsappApi(patientName, doctorName, whatsappNumber, time, date):
     sessStart = Sesscreator.start()
     dumSess = sessStart.session
     result = sessStart.sendText(phone_number, message)
-    time.sleep(1)
+    time.sleep(10)
     sessStart.close()
     
 def whatsappApiDoc(doctorName, whatsappNumber, time, date):
@@ -113,7 +119,11 @@ def whatsappMedia(whatsappNumber, pdfPathForWP, docName, patientName, prescDate)
     Sesscreator = Create(session=docName, catchQR= catchgenqr, logQR= True)
     sess = Sesscreator.session
     global client
-    sessStart = Sesscreator.start()
+    try:
+        sessStart = Sesscreator.start()
+    except futures._base.TimeoutError():
+        result = sessStart.sendFile(phone_number, path, name, caption )
+        sessStart.close()    
     dumSess = sessStart.session
     result = sessStart.sendFile(phone_number, path, name, caption )
     time.sleep(1)

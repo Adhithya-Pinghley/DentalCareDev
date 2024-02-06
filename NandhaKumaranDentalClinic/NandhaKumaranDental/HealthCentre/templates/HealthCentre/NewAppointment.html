@@ -1,7 +1,7 @@
 {% extends "HealthCentre/layout.html" %}
 {% load static %}
 {% block title %}
-NDC-Prescription
+Clinical-Appointment
 {% endblock%}
 
 {% block script %}
@@ -52,7 +52,7 @@ NDC-Prescription
         <div class="form-group" >
 
             <label  style="color:black">Please select a patient: </label>
-            <select name="selectedPatient" class="dropdown" placeholder="Select Patient" style="height: 150px; overflow-y: scroll;">
+            <select name="selectedPatient" class="dropdown" placeholder="Select Patient" style="overflow-y: scroll;">
               <option value = "">select patient</option>
                 {% for patient in patients %}
                     <option value="{{ patient.name }}" >{{ patient.name }}</option>
@@ -74,7 +74,7 @@ NDC-Prescription
       
       <br>
 
-      <label for="EnterTimeHour" style="color:rgb(3, 3, 3)">  Time(HH:MM)-</label>
+      {% comment %} <label for="EnterTimeHour" style="color:rgb(3, 3, 3)">  Time(HH:MM)-</label>
       <select name="EnterTimeHour" id="EnterTimeHour" class = "form-group">
         {% for hour in hours %}
           <option value="{{ hour }}">{{ hour }}</option>
@@ -106,8 +106,8 @@ NDC-Prescription
         {% for year in years %}
           <option value="{{ year }}">{{ year }}</option>
           {% endfor %}
-      </select>
-    </div>
+      </select> {% endcomment %}
+    {% comment %} </div> {% endcomment %}
       
     </div>
     <!-- <time id="current-time" datetime="00:00:00">Time 00:00</time> -->
@@ -125,8 +125,9 @@ NDC-Prescription
           {% endif %}
           <br>
         
-          <div class="jumbotron jumbotron-fluid" style = "margin:5%;padding:5%;margin-left: 30%;margin-right: 30%; background-color: rgba(30, 32, 45, 0.225);padding-top:2%;padding-bottom:2%" align ="center" width="300px">    
+              
           {% if request.session.appointmentEdit %}
+          <div class="jumbotron jumbotron-fluid" style = "margin:5%;padding:5%;margin-left: 30%;margin-right: 30%; background-color: rgba(30, 32, 45, 0.225);padding-top:2%;padding-bottom:2%" align ="center" width="300px">
           <form method="POST">
             {% csrf_token %}
             <!-- <div class="row">
@@ -214,7 +215,8 @@ NDC-Prescription
               <button align = "center" type="submit" name="action" style="width:auto; height: 10%;" >Submit </button>
             </div>
         </form>
+      </div>
         {% endif %}
-        </div>
+        
 {% endblock %}
 

@@ -2,7 +2,7 @@
 {% block title %}
 Clinical-Prescription
 {% endblock %}
-
+{% load static %}
 {% block script %}
 
     
@@ -126,7 +126,8 @@ Clinical-Prescription
           {% csrf_token %}
           <div class="container center_div"style = "background:rgba(255,255,255);padding-top:2%;padding-bottom:2%" width="300px">  
           <div style = "width:850px;height:200px; top : -50%;border: 1px solid #ccc;">
-            <img src="E:\Adhithya\dental-software\DentalCareDev\NandhaKumaranDentalClinic\NandhaKumaranDental\HealthCentre\static\HealthCentre\images\NandaLogo.jpg" style="width:100%;height:100%;"></img>
+            {% comment %} <img src="E:\Adhithya\dental-software\DentalCareDev\NandhaKumaranDentalClinic\NandhaKumaranDental\HealthCentre\static\HealthCentre\images\NandaLogo.jpg" style="width:100%;height:100%;"></img> {% endcomment %}
+            <img src="{{doclogo}}" style="width:100%;height:100%;" ></img>
           </div>
   
           <li class="dropdown-divider" style="margin-left:25%;margin-right:25%;border-color:black"></li>

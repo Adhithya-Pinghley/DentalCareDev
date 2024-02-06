@@ -1,7 +1,7 @@
 {% extends "HealthCentre/layout.html" %}
 {% load static %}
 {% block title %}
-NDC-Prescription
+Clinical-Timeline
 {% endblock %}
 
 {% block script %}
@@ -209,7 +209,7 @@ body {
           
       </div>
       {% endfor %}
-      {% for prescription in prescriptionData %}
+      {% comment %} {% for prescription in prescriptionData %}
 
         <div class="timeline">
           <div class="container right">
@@ -222,7 +222,7 @@ body {
           </div>
           </div>
         </div>
-          {% endfor %}
+          {% endfor %} {% endcomment %}
       </form>
       
       <!-- <div class="timeline"> -->

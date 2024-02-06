@@ -1,44 +1,81 @@
 {% extends "HealthCentre/layout.html" %}
 
 {% block title %}
-NDC-Contact us
+Clinical-Your details
 {% endblock %}
 
 {% block bodytag %}
 
   {% load static %}
-  <body background="{% static 'HealthCentre/images/i6.jpg' %}" style="background-size: auto auto;">
+  <body background="{% static 'HealthCentre/images/plain.jpg' %}" style="background-size: auto auto;">
 
 {% endblock %}
 
 {% block body %}
     <br>
-
+    {% for doctor in doctors %}
+    {% if doctor.name == request.session.Name %}
     <div class="jumbotron jumbotron-fluid" style = "margin-left:5%;margin-right:5%;background:rgba(0,0,0,0.6);color:white;">
         <div class="container">
+            
+              <br>
 
-            <h1 >Address</h1>
+              
+            <div class = "form-inline">
+              <h4>Name :  &nbsp;&nbsp;&nbsp;</h4> 
+              <br>
+              <h5 style = "color: black">{{ doctor.name }}</h5>
+            </div>
+              {% comment %} class="btn btn-info" {% endcomment %}
+              <br>
+            <br>
 
-            <p class="lead">****ADDRESS********</p>
-            <button class="btn btn-info" >Pin Code : ######</button>
+            
+            <div class = "form-inline">
+            <h4>Clinic Name : &nbsp;&nbsp;&nbsp;</h4>
+            <h5 style = "color: black">{{ doctor.clinicName }}</h5>
+            </div>
+            <br>
 
+            <br>
+
+            
+            <div class = "form-inline">
+            <h4>Qualification : &nbsp;&nbsp;&nbsp;</h4>
+            <h5 style = "color: black">{{ doctor.educationalQualification }}</h5>
+            </div>
+            <br>
+
+            <br>
+
+            <div class = "form-inline">
+            <h4>Specialization : &nbsp;&nbsp;&nbsp;</h4>
+            <h5 style = "color: black">{{ doctor.specialization }}</h5>
+            </div>
+            <br>
+            <div class = "form-inline">
+                <h4 >Address : &nbsp;&nbsp;&nbsp;</h4>
+                <h5 style = "color: black">{{ doctor.address }}</h5>
+                {% comment %} <button class="btn btn-info" >Pin Code : ######</button> {% endcomment %}
+            </div>
             <br>
             <br>
 
-            <h1>Email</h1>
-
-            <p class="lead">Suggestions and feedback are thoroughly welcomed.</p>
-            <button class="btn btn-info" >healthcentre@gmail.com</button>
-
+            {% comment %} <h1>Email</h1> {% endcomment %}
+            <div class = "form-inline">
+            <h4>Email : &nbsp;&nbsp;&nbsp;</h4>
+            <h5 style = "color: black">{{ doctor.email }}</h5>
+            </div>
             <br>
             <br>
 
-            <h1 >Reception Contact Numbers</h1>
-
-            <p class="lead">Please feel free to call us anytime. 24 x 7 Helpline Availability.</p>
-            <button class="btn btn-info" >Contact Numbers : 0141-3562834, 0141-35682104</button>
-
+            {% comment %} <h1 >Contact Number</h1> {% endcomment %}
+            <div class = "form-inline">
+            <h4>Contact Number : &nbsp;&nbsp;&nbsp;</h4>
+            <h5 style = "color: black">{{ doctor.contactNumber }}</h5>
+            </div>
         </div>
     </div>
-
+        {% endif %}
+        {% endfor %}
 {% endblock %}

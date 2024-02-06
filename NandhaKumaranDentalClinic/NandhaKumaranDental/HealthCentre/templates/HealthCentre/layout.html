@@ -42,7 +42,7 @@
         {% if request.session.isLoggedIn %}
             <a class="navbar-brand" href="/"><h3 style="color:black;text-align:center">Dr. {{ request.session.Name }}</h3></a>
         {% else %}
-            <a class="navbar-brand" href="/"><h2 style="color:black;text-align:center">Dr. Nandakumaran Dental CLinic</h2></a>
+            <a class="navbar-brand" href="/"><h2 style="color:black;text-align:center">Clinical</h2></a>
         {% endif %}
 
         <!-- <img src="{% static 'HealthCentre/images/jdh10.png' %}" style="width:5%;height:5%;"></img> -->
@@ -72,7 +72,7 @@
                         <a class="nav-link" href="{% url 'catchqrcode' %}" style="color:black"> QRCode </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'patMed' %}" style="color:black"> Edit Patient Medicine </a>
+                        <a class="nav-link" href="{% url 'patMed' %}" style="color:black"> Patient/Medicine Details </a>
                     </li>
                     
                     {% endif %}
@@ -85,7 +85,7 @@
                
                         <div class="dropdown-divider"></div>
                         <li class = "nav-item">
-                            <a class="nav-link" align = "right" style="color:black" href="{% url 'contactus' %}">Contact Us</a>
+                            <a class="nav-link" align = "right" style="color:black" href="{% url 'doctors' %}">Your Details</a>
                         </li>
                         
                         {% if request.session.isLoggedIn %}
@@ -94,7 +94,7 @@
                                 <a class="nav-link" style="color:black" href="{% url 'logout' %}">Logout</a>
                             </li>
                             <li class = "nav-item">
-                                <a class="nav-link" style="color:black" href="{% url 'updateExcel' %}">Excel</a>
+                                <a class="nav-link" style="color:black" href="{% url 'updateExcel' %}">Dowload Excel</a>
                             </li>
                             <br>
                             <li class="nav-item">

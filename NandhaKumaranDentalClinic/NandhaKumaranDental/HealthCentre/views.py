@@ -2,7 +2,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from .models import Doctor, Patient, Prescription, passwordHasher, emailHasher, Appointment, Medicine, timeofday
+from .models import Doctor, Patient, Prescription, passwordHasher, emailHasher, Appointment, Medicine, timeofday, doctorlogo
 from django.db.models import Count, Q
 from django.contrib.auth.decorators import login_required
 from .forms import AppointmentSet, AppointmentSetForm, AppointmentForm
@@ -14,7 +14,8 @@ import threading
 import sys, os
 import pyautogui
 import openpyxl
-from django.db import connections
+from django.db import connections, IntegrityError
+from django.core.exceptions import ValidationError
 from django.apps import apps
 import requests
 import zipfile
@@ -135,7 +136,15 @@ def uploadExcel(request):
         for row in worksheet.iter_rows(min_row=2, values_only= True):
             name, address, contactNumber, email, age, sex = row
             existingPatient = Patient.objects.filter(name = name)
-            if  not existingPatient :
+            for existingDetails in existingPatient:
+                doctname = request.session['Name']
+                doctpk = Doctor.objects.get(name = doctname)
+                if existingDetails.name == name or existingDetails.rollNumber == age or existingDetails.email == email or existingDetails.passwordHash == sex or existingDetails.address == address or existingDetails.contactNumber == contactNumber or existingDetails.doctorname == doctname:
+                    emailHash = emailHasher(email)
+                    patient = Patient(name = name,rollNumber = age, email = email, passwordHash = sex, address = address, 
+                                    contactNumber = contactNumber, emailHash = emailHash, doctorname = doctname, doctorid = doctpk)
+                    patient.save()
+            if not existingPatient :
                     doctorname = request.session['Name']
                     doctorpk = Doctor.objects.get(name = doctorname)
                     # Encrypting email to store inside database
@@ -211,15 +220,46 @@ def register(request):
                     
             # Creating a patient object and saving insdie the database if patient is selected
             elif userType == 'doctor':
+                clinicName = request.POST['clinicName']
+                educationQualification = request.POST['educationQualification']
                 
                 passwordHash = passwordHasher(userPassword)
                 emailHash = emailHasher(userEmail)
-                doctor = Doctor(name = name, specialization= userRollNo, email = userEmail, passwordHash = passwordHash, address = userAddress, contactNumber = userContactNo, emailHash = emailHash)
-                doctor.save()
+                try:
+                    doctor = Doctor(name = name, specialization= userRollNo, email = userEmail, passwordHash = passwordHash, address = userAddress, contactNumber = userContactNo, emailHash = emailHash, educationalQualification =  educationQualification, clinicName = clinicName)
+                    # try:
+                    #     doctor.full_clean()
+                    # except ValidationError:
+                    #     message = "Please fill in the required fields (*)"
+                    #     context = {
+                    #                 "message": message
+                    #             }
+
+                    #     # Editing response headers so as to ignore cached versions of pages
+                    #     response = render(request,"HealthCentre/registrationPortal.html",context)
+                    #     return responseHeadersModifier(response)
+                    doctor.save()
+                except IntegrityError:
+                    
+                    message = "Your Name, Email or Contact Number already exists!"
+                    context = {
+                                "message": message
+                            }
+
+                    # Editing response headers so as to ignore cached versions of pages
+                    response = render(request,"HealthCentre/registrationPortal.html",context)
+                    return responseHeadersModifier(response)
+                
                 global G_docName
+                DocObj = Doctor.objects.get(email = userEmail)
+                DocId = DocObj.pk
                 regDocName = name
-                G_docName = regDocName
+                G_docName = str(regDocName)
                 backgroundtastForQrCode()
+                # if not wpIsConnected:
+                #     request.session['wpStatus'] = "waiting for whatsapp QR code scan"
+                # else:
+                #     request.session['wpStatus'] = "whatsapp is registered"
 
             
             
@@ -227,11 +267,11 @@ def register(request):
             # Creating a patient object and saving insdie the database
             # patient = Patient(name = name,rollNumber = userRollNo, email = userEmail, passwordHash = passwordHash, address = userAddress, contactNumber = userContactNo, emailHash = emailHash )
             # patient.save()
-
+            message = "Login Successful !"
             # Storing success message in the context variable
             context = {
                 "userType" : userType,
-                "message":"User Registration Successful. Please Login."
+                "message": message
             }
 
             # Editing response headers so as to ignore cached versions of pages
@@ -257,7 +297,6 @@ def register(request):
         response = render(request,"HealthCentre/registrationPortal.html")
         return responseHeadersModifier(response)
 
-
 def doctors(request):
     """Function to send information about the doctors available to the user. """
 
@@ -267,7 +306,7 @@ def doctors(request):
     }
 
     # Editing response headers so as to ignore cached versions of pages
-    response = render(request,"HealthCentre/doctors.html",context)
+    response = render(request,"HealthCentre/contactus.html",context)
     return responseHeadersModifier(response)
 
 def login(request):
@@ -409,7 +448,7 @@ def login(request):
                 request.session['Name'] = docId.name
                 global G_docName
                 docNameCommon = request.session['Name']
-                G_docName = docNameCommon
+                G_docName = str(docNameCommon)
                 
                 # Redirecting to avoid form resubmission
                 # Redirecting to home page
@@ -956,6 +995,21 @@ def doctorprofile(request):
             clickedOnAddRow = True
             medicineIsSelected = True
             sessionIsSelected = True
+            # doctorSpecific = Patient.objects.filter(doctorname = request.session['Name']).order_by('name')
+            try:
+                doctor = doctorlogo.objects.get(docname=request.session['Name'])
+                docLogo = doctor.logo
+                stringPath = os.path.abspath(str(docLogo))
+                absPath = docLogo.path.split(os.path.sep)
+                absPathAsString = str(stringPath)
+                pathIndex = absPath.index("static")
+                newPath = os.path.join(*absPath[pathIndex:])
+                imagedata = {
+                    "doclogo" : absPathAsString
+                }
+                request.session['imagePath'] = imagedata
+            except doctorlogo.DoesNotExist:
+                newPath = ''
             context = {
                     "patients" : doctorSpecific, #Patient.objects.all().order_by('id'),
                     # "prescPatients" : Prescription.objects.all().order_by('id'),
@@ -963,7 +1017,8 @@ def doctorprofile(request):
                     "prescTimeOfDay" : timeofday.objects.all().order_by('id'),
                     'clickedOnAddRow' : clickedOnAddRow,
                     'medicineIsSelected' : medicineIsSelected,
-                    'sessionIsSelected' : sessionIsSelected
+                    'sessionIsSelected' : sessionIsSelected,
+                    "doclogo" : newPath,
                     }
             response = render(request, "HealthCentre/NewPrescription.html", context)
             return responseHeadersModifier(response)
@@ -1090,7 +1145,47 @@ def doctorprofile(request):
                 }
         response = render(request, "HealthCentre/prescriptionportal.html", context)
         return responseHeadersModifier(response)
-     
+
+def uploadImage(request):
+    
+    if request.method == 'GET':
+        response = HttpResponseRedirect(reverse('doctorprofile'))
+        return responseHeadersModifier(response)
+    if request.method == 'POST':
+        nameofdoctor = request.session['Name']
+        image_file = request.FILES.get('LogoImage')
+        try:
+            logoobj = doctorlogo.objects.get(docname = nameofdoctor)
+            if logoobj.logo != image_file:
+                logoobj.logo = image_file
+                logoobj.save()
+                logoOfDoc = logoobj.logo
+            elif logoobj.logo == image_file:
+                logoobj.logo.delete()
+                logoobj.logo = image_file
+                logoobj.save()
+                logoOfDoc = logoobj.logo
+            context ={
+                    "doclogo" :logoOfDoc,
+                        
+                    }
+            
+            response = HttpResponseRedirect(reverse('doctorprofile'))
+            return responseHeadersModifier(response)
+        except doctorlogo.DoesNotExist:
+            doctorObj = Doctor.objects.get(name = nameofdoctor)
+            docID = doctorObj.pk
+            doctorlogoupload = doctorlogo(logo= image_file, docname = nameofdoctor, doctorid= doctorObj )
+            doctorlogoupload.save()
+            logoOfDoc = doctorlogoupload.logo
+
+            context ={
+                        "doclogo" :logoOfDoc,
+                            
+                        }
+            response = render(request, 'HealthCentre/NewPrescription.html',context)
+            return responseHeadersModifier(response)
+
 def createTimeline(request):
     if request.method == 'GET':
 
@@ -1396,8 +1491,14 @@ def catchqrcode(request):
     
     # catchqr("data:image/png;base64,", "", 1, "2@242")
     global qrgen
+    # global wpIsConnected
     qrdata = qrgen
-    
+    WhatsappIsConnected = Settings.wpIsConnected
+    if not WhatsappIsConnected:
+        request.session['wpStatus'] = "waiting for whatsapp QR code scan"
+    else:
+        request.session['wpStatus'] = "whatsapp is registered. Now login"
+        
     context = {
         'qrdata': qrdata,
         
@@ -1412,9 +1513,9 @@ def catchqrcode(request):
 # client =""
 G_docName = ""
 def whatsappBrowser(request):
-    global G_docName
-    docNameCommon = request.session['Name']
-    G_docName = docNameCommon
+    # global G_docName
+    # docNameCommon = request.session['Name']
+    # G_docName = docNameCommon
     
     backgroundtastForQrCode()
     response = HttpResponseRedirect(reverse('login'))
@@ -1562,10 +1663,12 @@ def generatePDF(request):
         data2 = request.session.get('pdf_med_data' , {})
         data3 = request.session.get('pdf_days_data' , {})
         data4 = request.session.get('newRowData', {})
+        imagePath = request.session.get('imagePath')
         data.update(data1)
         data.update(data2)
         data.update(data3)
         data.update(data4)
+        data.update(imagePath)
         patientName = data.get("patientName")
         currentDate = date.today() 
         renderedHTML = render_to_string(r'HealthCentre\NewPrescriptionforRendering.html',data, request)

@@ -1,7 +1,7 @@
 {% extends "HealthCentre/layout.html" %}
 {% load static %}
 {% block title %}
-NDC-Prescription
+Clinical-QR
 {% endblock %}
 
 {% block script %}
@@ -19,7 +19,7 @@ NDC-Prescription
 {% block body %}
 <br>
 
-
+<h4>{{ request.session.wpStatus }}</h4>
 <div align = 'center'>
     <img id="dynamicImage" alt=" ">
 </div>

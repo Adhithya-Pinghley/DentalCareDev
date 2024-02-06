@@ -47,9 +47,9 @@ NDC-Prescription
     <br>
     <form method="post" id = "excelUploadform" action= "{% url 'uploadExcel' %}" enctype="multipart/form-data">
       {% csrf_token %}
-      
+      <h6>You need a specific format to upload patient data through excel, Please download the format by clicking "Download Excel"</h6>
       <input id = "excel" name="excel" type="file" ></input>
-      <button type="submit">Upload</button>
+      <button type="submit">Upload Excel</button>
     </form>
 
     <br>

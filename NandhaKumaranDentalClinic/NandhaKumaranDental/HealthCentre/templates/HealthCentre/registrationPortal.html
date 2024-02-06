@@ -1,7 +1,7 @@
 {% extends "HealthCentre/layout.html" %}
 
 {% block title %}
-NDC-Sign Up
+Clinical-Register
 {% endblock%}
 
 {% block script %}
@@ -33,6 +33,12 @@ NDC-Sign Up
         }
     }
 </script> -->
+{% if message %}
+        <div style="text-align:center;margin:0 auto;"class="alert alert-warning" role="alert">
+            {{ message }}
+        </div>
+    {% endif %}
+    <br>
     {% if request.session.isDoctor %}
 <li class="dropdown-divider" style="margin-left:25%;margin-right:25%;border-color:black"></li>
     <li class = "button">
@@ -220,7 +226,7 @@ NDC-Sign Up
                     <div class="form-row ">
   
                           <div class="col-6 ">
-                              <input name="userFirstNam"type="text" class="form-control" placeholder="First name">
+                              <input name="userFirstNam"type="text" class="form-control" placeholder="First name*" required>
                           </div>
                           <div class="col-6">
                               <input name="userLastName"type="text" class="form-control" placeholder="Last name">
@@ -233,8 +239,12 @@ NDC-Sign Up
                     <div class="form-row">
   
                           <div class="col-6">
-                              <input name="userEmail" type="email" class="form-control" placeholder="Email Address">
+                              <input name="userEmail" type="email" class="form-control" placeholder="Email Address*" required>
                           </div>
+                          
+    
+                      
+                      <br>
                       
                           <div class="col-6">
                       <!-- {% if userType == Patient %} -->
@@ -244,8 +254,17 @@ NDC-Sign Up
                       <!-- {% endif %} -->
                           </div>   
                     </div>
-  
-                      <br>
+                    <br>
+                    <div class="form-row">
+                    <div class="col-6">
+                        <input name="educationQualification" type="text" class="form-control" placeholder="Qualification">
+                    </div>
+                    <br>
+                    <div class="col-6">
+                        <input name="clinicName" type="text" class="form-control" placeholder="Clinic Name*" required>
+                    </div>
+                </div>
+                    <br>
                       <script>
                           function handleSelection() {
                             var selection = document.getElementById("userType").value;
@@ -274,7 +293,7 @@ NDC-Sign Up
                           </div>
   
                           <div class="col-6">
-                              <input name="userContactNo" type="number" class="form-control" placeholder="Contact Number">
+                              <input name="userContactNo" type="number" class="form-control" placeholder="Contact Number*" required>
                           </div>
   
                     </div>
@@ -284,11 +303,11 @@ NDC-Sign Up
                     <div class="form-row">
   
                           <div class="col-6">
-                              <input name="userPassword"type="password" class="form-control" placeholder="Password">
+                              <input name="userPassword"type="password" class="form-control" placeholder="Password*" required>
                           </div>
   
                           <div class="col-6">
-                              <input name="userConfirmPassword" type="password" class="form-control" placeholder="Confirm Password">
+                              <input name="userConfirmPassword" type="password" class="form-control" placeholder="Confirm Password*" required>
                           </div>
   
                     </div>
@@ -309,10 +328,6 @@ NDC-Sign Up
 
     <br>
 
-    {% if message %}
-        <div style="text-align:center;margin:0 auto;"class="alert alert-warning" role="alert">
-            {{ message }}
-        </div>
-    {% endif %}
+    
 
 {% endblock %}
