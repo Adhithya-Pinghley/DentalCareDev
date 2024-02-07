@@ -7,38 +7,160 @@ NDC-Contact us
 {% block bodytag %}
 
   {% load static %}
-  <body background="{% static 'HealthCentre/images/i6.jpg' %}" style="background-size: auto auto;">
-
+  <!-- <body background="{% static 'HealthCentre/images/i6.jpg' %}" style="background-size: auto auto;"> -->
+    
 {% endblock %}
 
 {% block body %}
+<style>
+     .hidein{
+        visibility: none;
+      }
+      .hideout{
+      visibility: hidden;
+      }  
+</style>
+    
+    {% for doctor in doctors %}
+    {% if doctor.name == request.session.Name %}
     <br>
-
     <div class="jumbotron jumbotron-fluid" style = "margin-left:5%;margin-right:5%;background:rgba(0,0,0,0.6);color:white;">
         <div class="container">
+            
+            <li class = "button">
+                
+                <a class = "button" id = "editButtn" href="{% url 'editDoctorDetails' doctor.id %}">Edit Doctor Details</a>
+                
+            </li>
+            <div class = "editButtn">
+                <h1 align = "center">Doctor Details</h1>
+                <li class="dropdown-divider" style="margin-left:25%;margin-right:25%;border-color:black"></li>
+                <br>
+                <form action="{% url 'contactus' %}"></form>
 
-            <h1 >Address</h1>
+                <br>
+                <h4>Doctor Name</h1>
+                <h5>{{ doctor.name }}</h5>
 
-            <p class="lead">****ADDRESS********</p>
-            <button class="btn btn-info" >Pin Code : ######</button>
+                <br>
+                <h4>Clinic Name</h4>
+                <h5>{{ doctor.clinicName }}</h5>
 
-            <br>
-            <br>
+                <br>
+                <h4>Address</h4>
+                <h5>{{ doctor.address }}</h5>
 
-            <h1>Email</h1>
+                <br>
+                <h4>Email</h4>
+                <h5>{{ doctor.email }}</h5>
 
-            <p class="lead">Suggestions and feedback are thoroughly welcomed.</p>
-            <button class="btn btn-info" >healthcentre@gmail.com</button>
+                <br>
+                <h4>Contact Numbers</h4>
+                <h5>{{ doctor.contactNumber }}</h5>
 
-            <br>
-            <br>
+                <br>
+            </div>
 
-            <h1 >Reception Contact Numbers</h1>
+            
+                {% if request.session.doctorEdit %}
+                <div class="jumbotron jumbotron-fluid overlay " ><button id="closeaddmed" type="button" class="hide"><strong>x</strong></button>
+                <h1 style="text-align:center;color:rgb(3, 3, 3)" class = "display-5">Edit Doctor Details</h1>
+                <li class="dropdown-divider" style="border-color:rgb(0, 0, 0)"></li>
+              
+                    <form method="post">
+                    {% csrf_token %}
+                    <div class="form-row ">
+  
+                          <div class="col-6 ">
+                              <input name="userFirstNam"type="text" class="form-control" placeholder="First name" value="{{ userFirstNam }}">
+                          </div>
+                          <div class="col-6">
+                              <input name="userLastName"type="text" class="form-control" placeholder="Last name" value="">
+                          </div>
+  
+                    </div>
+  
+                    <br>
+                    
+                    <div class="form-row">
+  
+                          <div class="col-6">
+                              <input name="userEmail" type="email" class="form-control" placeholder="Email Address" value="{{ userEmail }}">
+                          </div>
+                      
+                          <div class="col-6">
+                      <!-- {% if userType == Patient %} -->
+                              <input name="userRollNo" type="text" id="userRollNo" class="form-control" placeholder="Specialization" value="">
+                      <!-- {% elif userType == Doctor %} -->
+                              <!-- <input name="userRollNo" type="text" class="form-control" placeholder="License Number"> -->
+                      <!-- {% endif %} -->
+                          </div>   
+                    </div>
+  
+                      <br>
+  
+                    <div class="form-row">
+  
+                          <div class="col-6">
+                              <input name="userAddress" type="text" class="form-control" placeholder="Address" value="{{ userAddress }}">
+                          </div>
+  
+                          <div class="col-6">
+                              <input name="userContactNo" type="number" class="form-control" placeholder="Contact Number" value="{{ userContactNo }}">
+                          </div>
+  
+                    </div>
 
-            <p class="lead">Please feel free to call us anytime. 24 x 7 Helpline Availability.</p>
-            <button class="btn btn-info" >Contact Numbers : 0141-3562834, 0141-35682104</button>
+                    <br>
+  
+                    <div class="form-row">
+  
+                          <div class="col-6">
+                              <input name="userPassword"type="password" class="form-control" placeholder="Password" value="">
+                          </div>
+  
+                          <div class="col-6">
+                              <input name="userConfirmPassword" type="password" class="form-control" placeholder="Confirm Password" value="">
+                          </div>
+  
+                    </div>
+                    <br>
 
+                    <div class="form-row">
+  
+                        <div class="col-6">
+                            <input name="educationQualification" type="text" class="form-control" placeholder="Qualification" value="{{ educationQualification }}">
+                        </div>
+
+                        <div class="col-6">
+                            <input name="clinicName" type="text" class="form-control" placeholder="Clinic Name" value="{{ clinicName }}">
+                        </div>
+
+                  </div>
+
+                  <br>
+
+                    <li class="dropdown-divider" style="margin-left:25%;margin-right:25%"></li>
+  
+                    <div class="form-group form-check">
+                          <input type="checkbox" class="form-check-input" id="confirmCheck">
+                          <label class="form-check-label" for="exampleCheck1"><span class="badge badge-success">CONFIRM</span></label>
+                    </div>
+  
+                    <button type="submit" class="btn btn-warning">Submit</button>
+              </form>
         </div>
+        {% endif %}
+    
     </div>
-
+    </div>
+    <script>
+        var editdoc = document.getElementById('closeaddmed');
+        editdoc.addEventListener("click", function () {
+        editdoc.className = "hideout"; 
+        }); 
+        editdoc.className = "hidein"; 
+    </script>
+{% endif %}
+{% endfor %}
 {% endblock %}

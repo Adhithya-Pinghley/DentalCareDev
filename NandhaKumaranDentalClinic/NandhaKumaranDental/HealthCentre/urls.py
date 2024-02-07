@@ -42,6 +42,7 @@ urlpatterns = [
     path('updateExcel', views.updateExcel, name = 'updateExcel'),
     path('uploadExcel', views.uploadExcel, name = 'uploadExcel'),
     path('uploadImage', views.uploadImage, name = 'uploadImage'),
+     path('editDoctorDetails/<pk>', views.editDoctorDetails, name = 'editDoctorDetails'),
 ]
 
 # from django.urls import path

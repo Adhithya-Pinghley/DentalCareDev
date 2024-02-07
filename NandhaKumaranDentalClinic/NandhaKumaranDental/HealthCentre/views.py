@@ -557,18 +557,79 @@ def logout(request):
 def contactus(request):
     """Function to display Docotr contact information."""
     if request.method == 'GET':
+        request.session['doctorEdit'] = False
         if request.session['isLoggedIn'] and request.session['isDoctor'] == True:
-            doctorDetails = Doctor.objects.all()
-            doctrName = doctorDetails.name
-            doctrAddr = doctorDetails.address
-            doctrName = doctorDetails.
+            # doctrName = request.session['Name']
+            # doctor = Doctor.objects.get(name = request.session['Name'])
+            # records = doctor.doctorRecords.all()
+            # doctrName = doctor.name
+            # doctrAddr = doctor.address
+            # doctrEmail = doctor.email
+            # doctrContact = doctor.contactNumber
+            # doctrClinicName = doctor.clinicName
 
 
+
+            context = {
+                # "doctrAddr" : doctrAddr,
+                # "doctrEmail" : doctrEmail,
+                # "doctrContact" : doctrContact,
+                # "doctrName" : doctrName,
+                # "doctrClinicName" : doctrClinicName,
+                # "docObj" : doctor
+                "doctors" :Doctor.objects.all(),
+            }
 
 
     # Editing response headers so as to ignore cached versions of pages
-        response = render(request, "HealthCentre/contactus.html")
+            response = render(request, "HealthCentre/contactus.html",context)
+            return responseHeadersModifier(response)
+
+def editDoctorDetails(request,pk):
+
+    request.session['doctorEdit'] = True
+    if request.method == "POST": 
+        request.session['doctorEdit'] = False  
+        doctorObject = Doctor.objects.get(id=pk)
+        doctorObject.name = request.POST['userFirstNam'] + request.POST['userLastName']
+        doctorObject.address = request.POST['userAddress']
+        doctorObject.contactNumber = request.POST['userContactNo']
+        doctorObject.email = request.POST['userEmail']
+        doctorObject.specialization = request.POST['userRollNo']
+        # doctorObject.specialization = request.POST['userPassword']
+        doctorObject.educationalQualification = request.POST['educationQualification']
+        doctorObject.clinicName = request.POST['clinicName']
+
+        doctorObject.save()   
+
+        context = {
+               "doctors" : Doctor.objects.all(),
+             }
+        response = render(request, "HealthCentre/contactus.html", context)
         return responseHeadersModifier(response)
+
+    doctorObj = Doctor.objects.get(id=pk)
+    doctorName = doctorObj.name     
+    doctorAddr = doctorObj.address
+    doctorContact = doctorObj.contactNumber
+    doctorEmail = doctorObj.email
+    doctorEduQual = doctorObj.educationalQualification    
+    doctorClinic = doctorObj.clinicName 
+    doctorspecialization = doctorObj.specialization
+    context= {
+        "userFirstNam" :doctorName,
+        "userAddress" : doctorAddr,
+        "userContactNo" : doctorContact,
+        "userEmail" : doctorEmail,
+        "educationQualification" : doctorEduQual,
+        "clinicName" : doctorClinic,
+        "doctorspecialization" : doctorspecialization,
+        "doctors" : Doctor.objects.all(),
+        "docObj" : doctorObj
+
+    }
+    response = render(request, "HealthCentre/contactus.html", context)
+    return responseHeadersModifier(response)
 
 
 def doctorappointmentsfalse(request):
@@ -1288,6 +1349,7 @@ def requestSessionInitializedChecker(request):
         request.session['appointmentEdit'] = False
         request.session['patientMedEdit'] = False  
         request.session['medicineEdit'] = False 
+        request.session['doctorEdit'] = False 
         # request.session['patientMedicineEdit'] = False
         dummyBoolean = False
  
