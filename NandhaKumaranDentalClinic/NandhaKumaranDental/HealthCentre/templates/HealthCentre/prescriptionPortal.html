@@ -23,9 +23,9 @@ Clinical-Prescriptions
     <h1 align = "center">your prescriptions</h1>
 
     <li class="dropdown-divider" style="margin-left:25%;margin-right:25%;border-color:black"></li>
-    <li class = "button">
+    <div class = "button">
         <a class="button" align = "right" type ="submit" style="color:rgb(30, 126, 216)" href="{% url 'doctorprofile' %}">Write new prescription</a>
-    </li> 
+    </div> 
     {% if successPrescriptionMessage %}
         <br>
             <div style="text-align:center;margin:0 auto;"class="alert alert-warning" role="alert">
@@ -66,6 +66,10 @@ Clinical-Prescriptions
         position: absolute;
         right: 0;
       }
+      .hidein{
+        visibility : none;
+        display : none;
+      }
     </style>
 
     <form class="search-bar" method="post" action="{% url 'searchPrescriptions' %}">
@@ -83,7 +87,7 @@ Clinical-Prescriptions
           <tr>
             <!-- <th>  </th> -->
             <th>Patient Name</th>
-            <th>Symptoms</th>
+            <th>Date</th>
           </tr>
         </thead>
         <tbody>
@@ -92,8 +96,8 @@ Clinical-Prescriptions
                 <!-- <td><button class="tree-toggle" data-prescription-id="{{ prescription.id }}">Edit</button></td> -->
                 <!-- <div id="prescription-details-{{ prescription.id }}" class="prescription-details"></div>   -->
               <td>{{ prescription.prescribingPatient }}</td>
-              <td>{{ prescription.symptoms }}</td>
-              <td><a class="button" onclick="confirmDelete()" id ="deletebutton" href ="{% url 'deleteprescription' prescription.id %}">Use Me</a></td>
+              <td>{{ prescription.timestamp }}</td>
+              <td><button id = "proxyDelete" onclick = 'proxyDel()'>Use me</button> <a class="button hidein" id ="deletebutton" href ="{% url 'deleteprescription' prescription.id %}">Use Me</a></td>
             </tr>
             
             <tr class="prescription-details">
@@ -114,8 +118,8 @@ Clinical-Prescriptions
             <!-- <td><button class="tree-toggle" data-prescription-id="{{ prescription.id }}">Edit</button></td> -->
             <!-- <div id="prescription-details-{{ prescription.id }}" class="prescription-details"></div>   -->
           <td>{{ prescriptionPatientsearch.prescribingPatient }}</td>
-          <td>{{ prescriptionPatientsearch.symptoms }}</td>
-          <td><a class="button" onclick="confirmDelete()" id ="delbutton" href ="{% url 'deleteprescription' prescriptionPatientsearch.id %}">Delete</a></td>
+          <td>{{ prescriptionPatientsearch.timestamp }}</td>
+          <td><button id = "proxyDelete" onclick = 'proxyDel()'>Use me</button> <a class="button hidein" id ="deletebutton" href ="{% url 'deleteprescription' prescriptionPatientsearch.id %}">Delete</a></td>
         </tr>
         <tr class="prescription-details">
             <td>Doctor Name : {{ prescriptionPatientsearch.prescribingDoctor }} </td>
@@ -134,18 +138,7 @@ Clinical-Prescriptions
       <script>
         // Add click event listener to each row
         const rows = document.querySelectorAll('.prescription-row');
-        var delbutton = document.getElementById('.delbutton');
-        console.log(delbutton);
-        delbutton.addEventListener('click', function confirmDelete(event){
-          var isConfirmed = window.confirm("Are you sure you want to delete?");
-          if (isConfirmed){
-            alert("Element deleted!");
-          }
-          else {
-            alert("Deletion canceled.");
-          }
-
-        });
+        
         rows.forEach(row => {
           row.addEventListener('click', function() {
             // Get the prescription details div associated with the row
@@ -157,6 +150,21 @@ Clinical-Prescriptions
             detailsRow.style.display = detailsRow.style.display === 'none' ? 'table-row' : 'none';
           });
         });
+        var delbutton = document.getElementById('deletebutton');
+        console.log(delbutton);
+        function proxyDel(){
+          var isConfirmed = window.confirm("Are you sure you want to delete?");
+          if (isConfirmed){
+            delbutton.click();
+            alert("Element deleted!");
+          }
+          else {
+            alert("Deletion canceled.");
+          };
+
+        };
+        
+        
        
 
     </script>

@@ -64,13 +64,13 @@ Clinical-Prescription
       <!-- <form align="left" action="{% url 'doctorprofile' %}" method="post" style="margin-right:5%"> -->
         {% csrf_token %}
         <div class ="hide">
-       <li class = "button">
+       <div class = "button">
         <a class="button" align = "right" type ="submit" style="color:rgb(30,126,216); margin-left: 3%;" href="{% url 'doctorprofile' %}">Write new prescription</a>
         <!-- <li class = "button"> --> <br>
           <a class="button"  align = "right" type ="submit" style="color:rgb(30, 126, 216); margin-left: 3%;" href="{% url 'register' %}">Add new patient</a>
         <!-- </li> -->
         <button class="button" id="generatePdfFile" align = "right" type ="submit" style="color:rgb(30, 126, 216); margin-left: 3%;" >Print/Save pdf</button>
-    </li> 
+        </div> 
     <!-- href="{% url 'generatePDF' %}" -->
   </div>
   <br>

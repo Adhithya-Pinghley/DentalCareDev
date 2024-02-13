@@ -30,9 +30,9 @@ Clinical-Appointment
       {% if request.session.isDoctor %}
       <!-- <form align="left" action="{% url 'doctorprofile' %}" method="post" style="margin-right:5%"> -->
         
-       <li class = "button">
+       <div class = "button">
             <a class="button" align = "right" type ="submit" style="color:rgb(30, 126, 216)" href="{% url 'doctorappointments' %}">Create new appointment</a>
-       </li> 
+       </div> 
       
       <br>
       {% endif %}
@@ -62,9 +62,9 @@ Clinical-Appointment
                 {% endfor %}
             </select>
             <br>
-            <li class = "button">
+            <div class = "button">
               <a class="button" align = "right" type ="submit" style="color:rgb(3, 0, 15)" href="{% url 'register' %}">Add new patient</a>
-          </li>
+            </div>
          <br>
         </div>
     <div class = "form-group">

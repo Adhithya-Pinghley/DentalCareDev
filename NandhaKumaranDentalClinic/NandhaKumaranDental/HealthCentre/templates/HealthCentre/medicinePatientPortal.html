@@ -32,26 +32,7 @@ NDC-Prescription
     <button class="hide" id="Addmed" align = "right" type ="button" >Add new medicine</button><button id="closeaddmed" type="button" class="hide"><strong>x</strong></button>
 
     <br>
-    <form method = "post" id = "addnewmedicineform" action = "{% url 'createNewMedicine' %}">
-      {% csrf_token %}
-      <div id = "addnewmedicine" class = 'hideout'>
-      <input name="NewmedicineName" placeholder="Medicine Name"></input>
-      <select name="befAftFood" id ="befAftFood">
-        <option>Before</option>
-        <option>After</option>
-      </select>
-      <button id = "medsubmit" type="submit" class="btn btn-warning first">Add</button>
-    </div>
-    </form>
-
-    <br>
-    <form method="post" id = "excelUploadform" action= "{% url 'uploadExcel' %}" enctype="multipart/form-data">
-      {% csrf_token %}
-      <h6>You need a specific format to upload patient data through excel, Please download the format by clicking "Download Excel"</h6>
-      <input id = "excel" name="excel" type="file" ></input>
-      <button type="submit">Upload Excel</button>
-    </form>
-
+    
     <br>
     <style>
       body{
@@ -140,10 +121,34 @@ NDC-Prescription
         visibility: none;
       }
       .hideout{
-      visibility: hidden;
+        visibility: hidden;
       }  
+      .alwayshide{
+        
+        display : none;
+      }
     </style>
-    
+    <form method = "post" id = "addnewmedicineform" action = "{% url 'createNewMedicine' %}">
+      {% csrf_token %}
+      <div id = "addnewmedicine" class = 'hideout'>
+      <input name="NewmedicineName" placeholder="Medicine Name"></input>
+      <select name="befAftFood" id ="befAftFood">
+        <option>Before</option>
+        <option>After</option>
+      </select>
+      <button id = "medsubmit" type="submit" class="btn btn-warning first">Add</button>
+    </div>
+    </form>
+
+    <br>
+    <form method="post" id = "excelUploadform" action= "{% url 'uploadExcel' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <h6>You need a specific format to upload patient data through excel, Please download the format by clicking "Download Excel"</h6>
+      <input id = "excel" name="excel" type="file" ></input>
+      <button type="submit">Upload Excel</button>
+    </form>
+
+    <br>
     <div class = "hideout emojilay " id="emojiContainer" >
         <img src = "{% static 'HealthCentre\images\UseMeEmoji.gif' %}">
     </div>
@@ -183,7 +188,7 @@ NDC-Prescription
               <td>{{ patient.rollNumber }} </td>
               
               <td><a class="button" id = "editButtn" href ="{% url 'editPatientMed' patient.id %}">Edit</a></td>
-              <td><a class="button delete-link" id="useMeEmoji" href ="{% url 'deletepatientDetails' patient.id %}">Use Me</a></td>
+              <td><button id = "proxyDelete" onclick = 'PatproxyDel()'>Use me</button> <a class="button delete-link alwayshide" id="Patdeletebutton" href ="{% url 'deletepatientDetails' patient.id %}">Use Me</a></td>
               
               
               
@@ -220,7 +225,7 @@ NDC-Prescription
               <td>{{ medicine.medicinename }}</td>
               <td>{{ medicine.beforeafter }}</td>
               <td><a class="button" href="{% url 'medicineEdit' medicine.id %}">Edit</a></td>
-              <td><a class="button delete-link" id="useMeEmoji1" href="{% url 'deletemedicineDetails' medicine.id %}">Use Me</a></td>
+              <td><button id = "proxyDelete" onclick = 'proxyDel()'>Use me</button> <a class="button delete-link alwayshide" id="deletebutton" href="{% url 'deletemedicineDetails' medicine.id %}">Use Me</a></td>
               
             </tr>
 
@@ -342,22 +347,35 @@ rows.forEach(row => {
 
           })
         })
+        var delbutton = document.getElementById('deletebutton');
+        var patdelbutton = document.getElementById('Patdeletebutton');
+        console.log(delbutton);
+        function proxyDel(){
+          var isConfirmed = window.confirm("Are you sure you want to delete?");
+          if (isConfirmed){
+            delbutton.click();
+            
+            alert("Element deleted!");
+          }
+          else {
+            alert("Deletion canceled.");
+          };
 
+        };
+        
+        function PatproxyDel(){
+          var isConfirmed = window.confirm("Are you sure you want to delete?");
+          if (isConfirmed){
+            
+            patdelbutton.click();
+            alert("Element deleted!");
+          }
+          else {
+            alert("Deletion canceled.");
+          };
 
-var emojiImg = document.createElement('img');
-var emoji = document.getElementById('emojiContainer');
-console.log(emoji);
-var delEmoji = document.getElementById('useMeEmoji');
-console.log(delEmoji);
-
-// Set the source attribute to the URL of the emoji image
-// emojiImg.src = 'C:\Users\sarvn\OneDrive\Pictures\Screenshots\Screenshot.png'
-
-// Append the img element to the emojiContainer div
-// document.getElementById('emojiContainer').appendChild(emojiImg);
-delEmoji.addEventListener("click", function () {
-emoji.className = "hideout"; 
-});  
+        };
+ 
 
 var med = document.getElementById('addnewmedicine'); // TextBox for Medicine Name And Bef Afr Food
 var Addmed = document.getElementById('Addmed'); // Add New Medicine

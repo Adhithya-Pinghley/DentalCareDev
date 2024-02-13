@@ -23,13 +23,17 @@ Clinical-Appointments
     <h1 align = "center">your appointments</h1>
 
     <li class="dropdown-divider" style="margin-left:25%;margin-right:25%;border-color:black"></li>
-    <li class = "button">
+    <div class = "button">
         <a class="button" align = "right" type ="submit" style="color:rgb(30, 126, 216)" href="{% url 'doctorappointments' %}">Create new appointment</a>
-    </li> 
+    </div> 
     <style>
       .search-bar {
         position: absolute;
         right: 0;
+      }
+      .hidein{
+        visibility : none;
+        display : none;
       }
     </style>
     <!-- form-inline my-2 my-lg-0 -->
@@ -80,6 +84,7 @@ Clinical-Appointments
           background-color: #f5f5f5;
           padding: 10px;
         }
+       
     </style>
     
     <table class = "prescription-table">
@@ -98,7 +103,7 @@ Clinical-Appointments
               <td>{{ appointment.appointmentpatient }}</td>
               <td>{{ appointment.date }}</td>
               <td><a class="button" href ="{% url 'editAppointments' appointment.id %}">Edit</a></td>
-              <td><a class="button" onclick="confirmDelete()" id = "deletebutton" href ="{% url 'deleteappointment' appointment.id %}">Use Me</a></td>
+              <td> <button id = "proxyDelete" onclick = 'proxyDel()'>Use me</button> <a class="button hidein" id = "deletebutton" href ="{% url 'deleteappointment' appointment.id %}">Use Me</a> </td>
             </tr>
             <tr class="prescription-details">
                 <td>Doctor Name : {{ appointment.appointmentdoctor }} </td>
@@ -115,8 +120,9 @@ Clinical-Appointments
           <td>{{ appointmentPatientsearch.appointmentpatient }}</td>
           <td>{{ appointmentPatientsearch.date }}</td>
           <td><a class="button" href ="{% url 'editAppointments' appointmentPatientsearch.id %}">Edit</a></td>
-          <td><a class="button" onclick="confirmDelete()" id = "deletebutton" href ="{% url 'deleteappointment' appointmentPatientsearch.id %}">Use Me</a></td>
+          <td><button id = "proxyDelete" onclick = 'proxyDel()'>Use me</button> <a id = "deletebutton" href ="{% url 'deleteappointment' appointmentPatientsearch.id %}">Use Me</a></td>
         </tr>
+        
         <tr class="prescription-details">
             <td>Doctor Name : {{ appointmentPatientsearch.appointmentdoctor }} </td>
             <!-- <td>ID: {{ prescription.doctor }}</td> ID: {{ prescription.doctor }} -->
@@ -130,17 +136,7 @@ Clinical-Appointments
       <script>
         // Add click event listener to each row
         const rows = document.querySelectorAll('.prescription-row');
-        var delbutton = document.getElementById('.deletebutton');
-        console.log(delbutton);
-        delbutton.addEventListener('click', function confirmDelete(event){
-          var isConfirmed = window.confirm("Are you sure you want to delete?");
-          if (isConfirmed){
-            alert("Thunder deleted!");
-          }
-          else {
-            alert("Thunder not willing to Delete")
-          }
-        });
+        
       
         rows.forEach(row => {
           row.addEventListener('click', function() {
@@ -153,7 +149,23 @@ Clinical-Appointments
             detailsRow.style.display = detailsRow.style.display === 'none' ? 'table-row' : 'none';
           });
         });
+        var delbutton = document.getElementById('deletebutton');
+        var proxyDelete = document.getElementById('proxyDelete');
+        console.log('button clicked :', proxyDelete);
+        function proxyDel(event){
+          console.log('event triggered :', proxyDelete);
+          var isConfirmed = window.confirm("Are you sure you want to delete?");
+          if (isConfirmed){
+            
+            delbutton.click();
+            alert("Thunder deleted!");
 
+          }
+          else {
+            alert("Thunder not willing to Delete")
+            //event.preventDefault();
+          };
+        };
         
     </script>
 

@@ -214,10 +214,20 @@ def register(request):
                 doctorpk = Doctor.objects.get(name = doctorname)
                 # Encrypting email to store inside database
                 emailHash = emailHasher(userEmail)
-                patient = Patient(name = name,rollNumber = userRollNo, email = userEmail, passwordHash = passwordHash, address = userAddress, 
-                                  contactNumber = userContactNo, emailHash = emailHash, doctorname = doctorname, doctorid = doctorpk)
-                patient.save()
+                try:
+                    patient = Patient(name = name,rollNumber = userRollNo, email = userEmail, passwordHash = passwordHash, address = userAddress, 
+                                    contactNumber = userContactNo, emailHash = emailHash, doctorname = doctorname, doctorid = doctorpk)
+                    patient.save()
+                except IntegrityError:
                     
+                    message = "Patient Name already exists!, Use a different Name"
+                    context = {
+                                "message": message
+                            }
+
+                    # Editing response headers so as to ignore cached versions of pages
+                    response = render(request,"HealthCentre/registrationPortal.html",context)
+                    return responseHeadersModifier(response)
             # Creating a patient object and saving insdie the database if patient is selected
             elif userType == 'doctor':
                 clinicName = request.POST['clinicName']
@@ -676,8 +686,8 @@ def doctorappointments(request):
                 # prescpatient = request.POST['selectedPatient']
                 patient_id = request.POST['selectedPatient'] 
                 patient = Patient.objects.get(name=patient_id)
-            appointmentTime = request.POST['EnterTimeHour'].zfill(2) + request.POST['EnterTimeMinute'].zfill(2)
-            datetimeObject = datetime.strptime(appointmentTime, "%H%M")
+            # appointmentTime = datetime.(timePick) #request.POST['EnterTimeHour'].zfill(2) + request.POST['EnterTimeMinute'].zfill(2)
+            datetimeObject = datetime.strptime(timePick, "%H:%M") #, "%H%M"
             datetimeObject = datetimeObject.time()
             combinetime = datetime.combine(datetime.today(), datetimeObject)
             AppointmentTime1 = datetime.strftime(combinetime, '%I:%M %p')
@@ -697,8 +707,8 @@ def doctorappointments(request):
             datetimeObjectplusThree = datetime.strptime(strTimeObject, "%H%M")
             datetimeObjectplusThree = datetimeObjectplusThree.time()
             
-            appointmentDate = request.POST['EnterDate'] + request.POST['EnterDateMonth'] + request.POST['EnterYear']
-            dateobject = datetime.strptime(appointmentDate, "%d%m%Y")
+            # appointmentDate = request.POST['EnterDate'] + request.POST['EnterDateMonth'] + request.POST['EnterYear']
+            dateobject = datetime.strptime(datePick, "%Y-%m-%d") #, "%d%m%Y")
             dateobject = dateobject.date()
             combinedate = datetime.combine(dateobject, datetime.now().time())
             AppointmentDate1 = datetime.strftime(combinedate, "%b. %d, %Y")
@@ -749,7 +759,7 @@ def doctorappointments(request):
                 patientDetail = Patient.objects.get(name = patient_id)
                 patientNumber = patientDetail.contactNumber
                 if (datetimeObject < datetimeObjectplusThree) and (datetimeObject > currentTimeObj1) and (currentDateTimeObj == dateobject):
-                    whatsappApi(patient_id, doctor_id,  patientNumber, AppointmentTime1, AppointmentDate1) # datetimeObject, dateobject)
+                    whatsappApi(patient_id, doctor_id,  patientNumber, AppointmentTime1, AppointmentDate1, doctorDetail.clinicName) # datetimeObject, dateobject)
                     whatsappApiDoc(doctor_id, doctorNumber, AppointmentTime1, AppointmentDate1) # datetimeObject, dateobject)
                     # time.sleep(60)
                     
@@ -774,8 +784,8 @@ def editAppointments(request, pk):
         # form = AppointmentForm(request.POST, instance=appointment)
         # if form.is_valid():
             # form.save()
-        doctor = Doctor.objects.get(emailHash = request.session['userEmail'])
-        records = doctor.doctorRecords.all()
+        
+        # records = doctor.doctorRecords.all()
         appointObject = Appointment.objects.get(id=pk)
         if request.POST['selectedPatient'] == "":
             appointObject.appointmentpatient = request.POST['PatientNameForAppointment']
@@ -788,7 +798,7 @@ def editAppointments(request, pk):
         
         appointmentTime = request.POST['EnterTimeHour'].zfill(2) + request.POST['EnterTimeMinute'].zfill(2)
         appointmentTime = datetime.strptime(appointmentTime, "%H%M")
-        appointObject.time = appointmentTime
+        appointObject.time = appointmentTime.time()
         combinetime = datetime.combine(datetime.today(), appointObject.time)
         AppointmentTime1 = datetime.strftime(combinetime, '%I:%M %p')
         appointmentDate = request.POST['EnterDate'].zfill(2) + request.POST['EnterDateMonth'].zfill(2) + request.POST['EnterYear'].zfill(2)
@@ -801,8 +811,9 @@ def editAppointments(request, pk):
         appointObject.subject = "subject"
         appointObject.save()
         patientDetails = Patient.objects.get(name=appointObject.appointmentpatient)
-        patientNumber = patientDetails.contactNumber 
-        whatsappApiEdit(appointObject.appointmentpatient, appointObject.appointmentdoctor, patientNumber, AppointmentTime1, AppointmentDate1) # appointObject.time, appointObject.date)
+        patientNumber = patientDetails.contactNumber
+        doctor = Doctor.objects.get(name = request.session['Name'])
+        whatsappApiEdit(appointObject.appointmentpatient, appointObject.appointmentdoctor, patientNumber, AppointmentTime1, AppointmentDate1, doctor.clinicName) # appointObject.time, appointObject.date)
         # appointment = Appointment(time = datetimeObject, date = dateobject, subject = appointmentSubject, notes = appointmentNotes,
         #                             appointmentpatient = appointmentPatient, appointmentdoctor = appointmentDoctor)
         # appointment.save()
@@ -1193,7 +1204,7 @@ def createTimeline(request):
                 doctorSpecific = Patient.objects.filter(doctorname = request.session['Name']).order_by('name')
                 context = {
                         "patients" : doctorSpecific,
-                        
+                        "patientName" : ""
                         }
                 response = render(request, "HealthCentre/timeline.html", context)
                 return responseHeadersModifier(response)
@@ -1215,11 +1226,12 @@ def createTimeline(request):
                 except Prescription.DoesNotExist :
                     for singleprescription in prescriptionData:
                         singleprescription = None
-
+                doctorSpecific = Patient.objects.filter(doctorname = request.session['Name']).order_by('name')
                 context = {
-                    "patients" : Patient.objects.all().order_by('id'),
+                    "patients" : doctorSpecific,
                     "appointmentData" : appointmentData,
-                    "prescriptionData" : prescriptionData,                    
+                    "prescriptionData" : prescriptionData,     
+                    "patientName" : selectedPatient.name               
                 }
                 response = render(request, "HealthCentre/timeline.html", context)
                 return responseHeadersModifier(response)
@@ -1454,7 +1466,7 @@ def whatsappNotification():
                 patientDetail = Patient.objects.get(name=patientName)
                 patientNumber = patientDetail.contactNumber
                 if (AppointmentDate == currentDate):
-                    whatsappApi(patientName, doctorName, patientNumber, AppointmentTime1, AppointmentDate1)
+                    whatsappApi(patientName, doctorName, patientNumber, AppointmentTime1, AppointmentDate1, doctorDetail.clinicName)
                     whatsappApiDoc(doctorName, doctorNumber, AppointmentTime1, AppointmentDate1) #AppointmentTime, AppointmentDate)
                     time.sleep(60)
                 

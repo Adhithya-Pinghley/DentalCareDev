@@ -2,6 +2,7 @@ from WPP_Whatsapp import Create, PlaywrightSafeThread, Whatsapp
 from django.conf import Settings
 import time
 from concurrent import futures
+from playwright._impl import _api_types 
 # if __name__ == '__main__':
     # from .views import catchgenqr
 # import psutil
@@ -44,10 +45,13 @@ class openWhatsapp():
         Settings.globalVar = creator
         Settings.wpIsConnected = False
         global client
-        client = creator.start()
-        # global wpIsConnected
-        # if client.__needsToScan():
-        #     wpIsConnected = False
+        try:
+            client = creator.start()
+            if client.waitForLogin():
+                time.sleep(10) 
+        except futures._base.TimeoutError():
+            time.sleep(7)
+            client.close()
     # Now scan Whatsapp Qrcode in browser
     # check state of login
         if creator.state != 'CONNECTED':
@@ -58,56 +62,92 @@ class openWhatsapp():
             # request.session['wpStatus'] = True
             Settings.wpIsConnected = True
         # return client
-        time.sleep(10)
-        client.close()
+        time.sleep(5)
+        try:
+            client.close()
+        except _api_types.Error:
+            time.sleep(5)
+            client.close()
 
-def whatsappApi(patientName, doctorName, whatsappNumber, time_, date):
+def whatsappApi(patientName, doctorName, whatsappNumber, time_, date, clinicName):
     # reclient= openWhatsapp.client
     from .views import catchgenqr
     phone_number = f"+91{whatsappNumber}" #phone_number = "+917904427507"  # or "+201016708170"
-    message = f"Dear {patientName}, This is Dr.{doctorName}, from XYZ Clinic. Your Appointment is fixed at {time_} on {date}. Please do not forget your prescription!! Thanks!!"
+    message = f"APPOINTMENT REMINDER: Dear {patientName}, This is Dr.{doctorName}, from {clinicName}. You have an appointment in three hours. Your Appointment is fixed at {time_} on {date}."
     # global client
     # result = client.sendText(phone_number, message)
     Sesscreator = Create(session=doctorName, catchQR= catchgenqr, logQR= True)
     sess = Sesscreator.session
     global client
-    sessStart = Sesscreator.start()
+    try:
+        sessStart = Sesscreator.start()
+        if sessStart.waitForLogin():
+            time.sleep(10)
+    except futures._base.TimeoutError():
+        result = sessStart.sendText(phone_number, message)
+        sessStart.close()    
     dumSess = sessStart.session
     result = sessStart.sendText(phone_number, message)
-    time.sleep(10)
-    sessStart.close()
-    
+    time.sleep(5)
+    try:
+        sessStart.close()
+    except _api_types.Error or futures._base.TimeoutError():
+        time.sleep(5)
+        pass
+        # sessStart.close()
+        
 def whatsappApiDoc(doctorName, whatsappNumber, time_, date):
     from .views import catchgenqr
     phone_number = f"+91{whatsappNumber}" #phone_number = "+917904427507"  # or "+201016708170"
-    message = f"Dear {doctorName}, You have an appointment fixed at {time_} on {date}. Thanks!!"
+    message = f"APPOINTMENT REMINDER: Dear {doctorName}, You have an appointment in three hours, fixed at {time_} on {date}. Thanks!!"
     # global client
     # # Simple message
     # result = client.sendText(phone_number, message)
     Sesscreator = Create(session=doctorName, catchQR= catchgenqr, logQR= True)
     sess = Sesscreator.session
     global client
-    sessStart = Sesscreator.start()
+    try:
+        sessStart = Sesscreator.start()
+        if sessStart.waitForLogin():
+            time.sleep(10)
+    except futures._base.TimeoutError():
+        result = sessStart.sendText(phone_number, message)
+        sessStart.close()
     dumSess = sessStart.session
     result = sessStart.sendText(phone_number, message)
-    time.sleep(1)
-    sessStart.close()
+    time.sleep(5)
+    try:
+        sessStart.close()
+    except _api_types.Error:
+        time.sleep(5)
+        pass
+        # sessStart.close()
+    
 
-def whatsappApiEdit(patientName, doctorName, whatsappNumber, time_, date):
+def whatsappApiEdit(patientName, doctorName, whatsappNumber, time_, date, clinicName):
     # reclient= openWhatsapp.client
     from .views import catchgenqr
     phone_number = f"+91{whatsappNumber}" #phone_number = "+917904427507"  # or "+201016708170"
-    message = f"Dear {patientName}, This is Dr.{doctorName}, from xyz Clinic. Your Appointment has been changed to {time_} on {date}. Please do not forget your prescription!! Thanks!!"
+    message = f"Dear {patientName}, This is Dr.{doctorName}, from {clinicName}. Your Appointment has been changed to {time_} on {date}."
     global creator
-    
     Sesscreator = Create(session=doctorName, catchQR= catchgenqr, logQR= True)
     sess = Sesscreator.session
     global client
-    sessStart = Sesscreator.start()
-    dumSess = sessStart.session
+    try:
+        sessStart = Sesscreator.start()
+        if sessStart.waitForLogin():
+            time.sleep(10)
+    except futures._base.TimeoutError():
+        result = sessStart.sendText(phone_number, message)
+        sessStart.close()
     result = sessStart.sendText(phone_number, message)
-    time.sleep(1)
-    sessStart.close()
+    time.sleep(5)
+    try:
+        sessStart.close()
+    except _api_types.Error:
+        time.sleep(5)
+        # sessStart.close()
+        pass
     
 def whatsappMedia(whatsappNumber, pdfPathForWP, docName, patientName, prescDate):
     from .views import catchgenqr
@@ -121,13 +161,20 @@ def whatsappMedia(whatsappNumber, pdfPathForWP, docName, patientName, prescDate)
     global client
     try:
         sessStart = Sesscreator.start()
+        if sessStart.waitForLogin():
+            time.sleep(25)
     except futures._base.TimeoutError():
         result = sessStart.sendFile(phone_number, path, name, caption )
         sessStart.close()    
     dumSess = sessStart.session
     result = sessStart.sendFile(phone_number, path, name, caption )
-    time.sleep(1)
-    sessStart.close()
+    time.sleep(5)
+    try:
+        sessStart.close()
+    except _api_types.Error:
+        time.sleep(5)
+        # sessStart.close()
+        pass
     # message = openWhatsapp.client.sendMessageOptions()
 
 

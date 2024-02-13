@@ -25,7 +25,7 @@ class doctorlogo(models.Model):
     docname = models.CharField(max_length = 100)
     logo = models.ImageField(upload_to=r'NandhaKumaranDentalClinic\NandhaKumaranDental\HealthCentre\static\HealthCentre\images', null=True, blank=True)
 class Patient(models.Model):
-    name = models.CharField(max_length = 30)
+    name = models.CharField(unique = True, max_length = 30)
     address = models.CharField(max_length = 2000)
     contactNumber = models.CharField(max_length = 10, db_column = 'contactnumber')
     email = models.EmailField(max_length = 255, null= True, blank= True)
