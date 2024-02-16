@@ -60,10 +60,12 @@
                 {% if request.session.isLoggedIn %}
                     {% if request.session.isDoctor %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}" style="color:black">Your Prescriptions <span class="badge badge-primary badge-pill">{{ request.session.numberNewPrescriptions }} NEW</span></a>
+                        <a class="nav-link" href="{% url 'login' %}" style="color:black">Your Prescriptions </a>
+                        {% comment %} <span class="badge badge-primary badge-pill">{{ request.session.numberNewPrescriptions }} NEW</span> {% endcomment %}
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'doctorappointmentsfalse' %}" style="color:black">Your Appointments <span class="badge badge-primary badge-pill">{{ request.session.numberNewAppointments }} NEW</span></a>
+                        <a class="nav-link" href="{% url 'doctorappointmentsfalse' %}" style="color:black">Your Appointments </a>
+                        {% comment %} <span class="badge badge-primary badge-pill">{{ request.session.numberNewAppointments }} NEW</span> {% endcomment %}
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'createTimeline' %}" style="color:black"> Timeline </a>

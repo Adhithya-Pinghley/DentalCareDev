@@ -220,7 +220,7 @@ def register(request):
                     patient.save()
                 except IntegrityError:
                     
-                    message = "Patient Name already exists!, Use a different Name"
+                    message = "Patient Name or Email already exists!, Use a different Name or email"
                     context = {
                                 "message": message
                             }
@@ -249,6 +249,17 @@ def register(request):
                     #     response = render(request,"HealthCentre/registrationPortal.html",context)
                     #     return responseHeadersModifier(response)
                     doctor.save()
+                    message = "Login Successful !"
+            # Storing success message in the context variable
+                    context = {
+                        "userType" : userType,
+                        "message": message
+                    }
+
+                    # Editing response headers so as to ignore cached versions of pages
+                    # response = render(request, "HealthCentre/registrationPortal.html",context)
+                    response = HttpResponseRedirect(reverse('catchqrcode'))
+                    return responseHeadersModifier(response)
                 except IntegrityError:
                     
                     message = "Your Name, Email or Contact Number already exists!"
@@ -260,12 +271,12 @@ def register(request):
                     response = render(request,"HealthCentre/registrationPortal.html",context)
                     return responseHeadersModifier(response)
                 
-                global G_docName
-                DocObj = Doctor.objects.get(email = userEmail)
-                DocId = DocObj.pk
-                regDocName = name
-                G_docName = str(regDocName)
-                backgroundtastForQrCode()
+            global G_docName
+            DocObj = Doctor.objects.get(email = userEmail)
+            DocId = DocObj.pk
+            regDocName = name
+            G_docName = str(regDocName)
+            backgroundtastForQrCode()
                 # if not wpIsConnected:
                 #     request.session['wpStatus'] = "waiting for whatsapp QR code scan"
                 # else:
@@ -286,7 +297,7 @@ def register(request):
 
             # Editing response headers so as to ignore cached versions of pages
             # response = render(request, "HealthCentre/registrationPortal.html",context)
-            response = HttpResponseRedirect(reverse('catchqrcode'))
+            response = HttpResponseRedirect(reverse('login'))
             return responseHeadersModifier(response)
 
         # If the passwords given don't match
@@ -1850,14 +1861,15 @@ def searchPatients(request):
         return responseHeadersModifier(response)
     if request.method == 'POST':
         searchQuery = request.POST["searchQuery"]
+        doctorSpecific = Patient.objects.filter(doctorname = request.session['Name']).order_by('name')
         if searchQuery != '':
 
-            searchFilterPatients = Patient.objects.filter(Q(name__icontains = searchQuery) |
+            searchFilterPatients = Patient.objects.filter((Q(name__icontains = searchQuery) |
                                                                 Q(address__icontains = searchQuery) |
                                                                 Q(contactNumber__icontains = searchQuery) |
                                                                 Q(email__icontains = searchQuery) |
-                                                                Q(rollNumber__icontains = searchQuery)|
-                                                                Q(doctorname__icontains = request.session['Name']))
+                                                                Q(rollNumber__icontains = searchQuery)) &
+                                                                Q(doctorname = request.session['Name']))
             context = {
                 'editPat' : searchFilterPatients.order_by('name'),
                 "editMedicine" : Medicine.objects.all(),

@@ -173,7 +173,7 @@ body {
 
     <form method="post" action="{% url 'createTimeline' %}">
         {% csrf_token %}
-        <label  style="color:white">Please select a patient: </label>
+        <label  style="color:black">Please select a patient: </label>
         <select name="selectedPatient" id = "selectedPatient" class="form-control" placeholder="Select Patient">
         <option value = "">select patient</option>
             {% for patient in patients %}

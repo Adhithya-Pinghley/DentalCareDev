@@ -265,10 +265,12 @@ Clinical-Prescription
         <div id="medicine-data">
           <!-- Data will be displayed here -->
         </div>
-          <div class="form-group" style = "margin-left: 70%;">
-            <label class="form-group" style="color:rgb(0, 0, 0);">For </label>
+        <br>
+        <br>
+          <div class="form-inline" style = "margin-left: 70%;">
+            <h4 class="form-group" style="color:rgb(0, 0, 0);">For </h4>
             <input name="noOfDays" id = "noOfDays" type="text" class="form-group" placeholder="days">
-            <label class="form-group" style="color:rgb(0, 0, 0);">days </label>
+            <h4 class="form-group" style="color:rgb(0, 0, 0);">days </h4>
           </div>
 
           
@@ -590,7 +592,7 @@ Clinical-Prescription
             $.ajax({
               method: 'GET',
               url : '{% url "doctorprofile" %}',
-              data : {'SelectedMed' : encodeURIComponent(MedicineSelected)},
+              data : {'SelectedMed' : MedicineSelected},
               dataType : 'json',
               success : function(data) {
                 $('#beforeAfter').html(data.MedBefAft);

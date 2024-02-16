@@ -93,6 +93,7 @@ Clinical-Appointments
             <!-- <th>  </th> -->
             <th>Patient Name</th>
             <th>Date</th>
+            <th>Time</th>
           </tr>
         </thead>
         <tbody>
@@ -102,6 +103,7 @@ Clinical-Appointments
                 <!-- <div id="prescription-details-{{ prescription.id }}" class="prescription-details"></div>   -->
               <td>{{ appointment.appointmentpatient }}</td>
               <td>{{ appointment.date }}</td>
+              <td>{{ appointment.time }}</td>
               <td><a class="button" href ="{% url 'editAppointments' appointment.id %}">Edit</a></td>
               <td> <button id = "proxyDelete" onclick = 'proxyDel()'>Use me</button> <a class="button hidein" id = "deletebutton" href ="{% url 'deleteappointment' appointment.id %}">Use Me</a> </td>
             </tr>
@@ -120,7 +122,7 @@ Clinical-Appointments
           <td>{{ appointmentPatientsearch.appointmentpatient }}</td>
           <td>{{ appointmentPatientsearch.date }}</td>
           <td><a class="button" href ="{% url 'editAppointments' appointmentPatientsearch.id %}">Edit</a></td>
-          <td><button id = "proxyDelete" onclick = 'proxyDel()'>Use me</button> <a id = "deletebutton" href ="{% url 'deleteappointment' appointmentPatientsearch.id %}">Use Me</a></td>
+          <td><button id = "proxyDelete" onclick = 'proxyDel()'>Use me</button> <a class="button hidein" id = "deletebutton" href ="{% url 'deleteappointment' appointmentPatientsearch.id %}">Use Me</a></td>
         </tr>
         
         <tr class="prescription-details">

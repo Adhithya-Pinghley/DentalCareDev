@@ -28,7 +28,7 @@ class Patient(models.Model):
     name = models.CharField(unique = True, max_length = 30)
     address = models.CharField(max_length = 2000)
     contactNumber = models.CharField(max_length = 10, db_column = 'contactnumber')
-    email = models.EmailField(max_length = 255, null= True, blank= True)
+    email = models.EmailField(unique = True, max_length = 255, null= True, blank= True)
     rollNumber = models.CharField(max_length = 8, db_column = 'rollnumber') 
     passwordHash = models.CharField(max_length = 64, db_column = 'passwordhash')
     emailHash = models.CharField(max_length = 64, db_column = 'emailhash')  
@@ -91,8 +91,8 @@ class Appointment(models.Model):
     patientPres = models.ForeignKey(Patient, related_name = "patientPrescRecords", on_delete = models.CASCADE, db_column= 'patientpres')
     appointmentpatient = models.CharField(max_length=2000, default = "")
     appointmentdoctor  = models.CharField(max_length=2000, default= "")
-    AppointmentTimeStamp = models.DateTimeField(auto_now_add = True, db_column = 'appointmenttimestamp')#auto_now_add = True 
-
+    AppointmentTimeStamp = models.DateTimeField(default = timezone.now, db_column = 'appointmenttimestamp')#auto_now_add = True 
+#auto_now_add = True, 
     def __str__(self):
         return "\nDoctorId :" + str(self.doctorPres) + "\nPatientId :" + str(self.patientPres) + "\nDoctor :" + str(self.appointmentdoctor) + "\n\nPatient" + str(self.appointmentpatient) +"\n\nDate :"+ str(self.date) + "\n\nTime :" + str(self.time) + "\n\nSubject :" + str(self.subject) + "\n\nnotes :" + str(self.notes) + "\n\n"
     class Meta:
