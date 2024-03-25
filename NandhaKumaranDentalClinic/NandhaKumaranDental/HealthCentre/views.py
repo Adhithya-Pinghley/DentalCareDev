@@ -19,12 +19,13 @@ from django.core.exceptions import ValidationError
 from django.apps import apps
 import requests
 import zipfile
-from django.conf import Settings
+from django.conf import settings
 from WPP_Whatsapp import Create, PlaywrightSafeThread
 from weasyprint import HTML, CSS
 import pdfkit
 from django.template.loader import render_to_string, get_template
 from jinja2 import Template
+import asyncio
 if ('runserver' in sys.argv):
     from .Whatsapptestfile import whatsappApi, openWhatsapp, whatsappApiEdit, whatsappMedia, whatsappApiDoc
     # import Whatsapptestfile
@@ -250,6 +251,12 @@ def register(request):
                     #     return responseHeadersModifier(response)
                     doctor.save()
                     message = "Login Successful !"
+                    global G_docName
+                    DocObj = Doctor.objects.get(email = userEmail)
+                    DocId = DocObj.pk
+                    regDocName = name
+                    G_docName = str(regDocName)
+                    backgroundtastForQrCode()
             # Storing success message in the context variable
                     context = {
                         "userType" : userType,
@@ -271,12 +278,7 @@ def register(request):
                     response = render(request,"HealthCentre/registrationPortal.html",context)
                     return responseHeadersModifier(response)
                 
-            global G_docName
-            DocObj = Doctor.objects.get(email = userEmail)
-            DocId = DocObj.pk
-            regDocName = name
-            G_docName = str(regDocName)
-            backgroundtastForQrCode()
+            
                 # if not wpIsConnected:
                 #     request.session['wpStatus'] = "waiting for whatsapp QR code scan"
                 # else:
@@ -824,7 +826,8 @@ def editAppointments(request, pk):
         patientDetails = Patient.objects.get(name=appointObject.appointmentpatient)
         patientNumber = patientDetails.contactNumber
         doctor = Doctor.objects.get(name = request.session['Name'])
-        whatsappApiEdit(appointObject.appointmentpatient, appointObject.appointmentdoctor, patientNumber, AppointmentTime1, AppointmentDate1, doctor.clinicName) # appointObject.time, appointObject.date)
+        thread = threading.Thread(target = whatsappApiEdit, args = (appointObject.appointmentpatient, appointObject.appointmentdoctor, patientNumber, AppointmentTime1, AppointmentDate1, doctor.clinicName)) # appointObject.time, appointObject.date)
+        thread.start()
         # appointment = Appointment(time = datetimeObject, date = dateobject, subject = appointmentSubject, notes = appointmentNotes,
         #                             appointmentpatient = appointmentPatient, appointmentdoctor = appointmentDoctor)
         # appointment.save()
@@ -1516,7 +1519,7 @@ def catchqrcode(request):
     global qrgen
     # global wpIsConnected
     qrdata = qrgen
-    WhatsappIsConnected = Settings.wpIsConnected
+    WhatsappIsConnected = settings.WP_IS_CONNECTED
     if not WhatsappIsConnected:
         request.session['wpStatus'] = "waiting for whatsapp QR code scan"
     else:
@@ -1545,7 +1548,7 @@ def whatsappBrowser(request):
     return response
 
 def whatsappStatus(request):
-    creator = Settings.globalVar
+    creator = settings.GLOBAL_VAR
     global G_docName
     # docNameCommon = request.session['Name']
     # G_docName = docNameCommon
@@ -1776,7 +1779,8 @@ def editPatientMed(request,pk):
     patientAddr = patientObj.address
     patientContact = patientObj.contactNumber
     patientEmail = patientObj.email
-    patientRoll = patientObj.rollNumber   
+    patientRoll = patientObj.rollNumber
+    patientSex = patientObj.passwordHash
     doctorSpecific = Patient.objects.filter(doctorname = request.session['Name']).order_by('name')     
     context= {
         "userFirstNam" :patientName,
@@ -1785,6 +1789,7 @@ def editPatientMed(request,pk):
         "userEmail" : patientEmail,
         "userRollNo" : patientRoll,
         "editPat" : doctorSpecific,
+        "patientSex" : patientSex,
         "editMedicine" : Medicine.objects.all(),
 
     }

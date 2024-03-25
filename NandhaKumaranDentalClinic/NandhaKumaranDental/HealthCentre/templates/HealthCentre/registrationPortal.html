@@ -62,10 +62,10 @@ Clinical-Register
                   <div class="form-row ">
 
                         <div class="col-6 ">
-                            <input name="userFirstNam"type="text" class="form-control" placeholder="First name" required>
+                            <input name="userFirstNam"type="text" class="form-control" placeholder="First name*" required>
                         </div>
                         <div class="col-6">
-                            <input name="userLastName"type="text" class="form-control" placeholder="Last name" required>
+                            <input name="userLastName"type="text" class="form-control" placeholder="Last name">
                         </div>
                         
                   </div>
@@ -110,11 +110,11 @@ Clinical-Register
                   <div class="form-row">
 
                         <div class="col-6">
-                            <input name="userAddress" type="text" class="form-control" placeholder="Address" required>
+                            <input name="userAddress" type="text" class="form-control" placeholder="Address" >
                         </div>
 
                         <div class="col-6">
-                            <input name="userContactNo" type="number" class="form-control" placeholder="Contact Number" required>
+                            <input name="userContactNo" type="number" class="form-control" placeholder="Contact Number*" required>
                         </div>
 
                   </div>
@@ -124,7 +124,7 @@ Clinical-Register
                   <div class="form-row">
 
                         <div class="col-6">
-                            <input name="userPassword" class="form-control" placeholder="Sex" required>
+                            <input name="userPassword" class="form-control" placeholder="Sex*" required>
                         </div>
                     {% if userType == 'doctor' %}
                         <div class="col-6">

@@ -1,5 +1,5 @@
 from WPP_Whatsapp import Create, PlaywrightSafeThread, Whatsapp
-from django.conf import Settings
+from django.conf import settings
 import time
 from concurrent import futures
 from playwright._impl import _api_types 
@@ -42,8 +42,8 @@ class openWhatsapp():
         your_session_name = DocName #"test"
         global creator
         creator = Create(session=your_session_name, catchQR= catchgenqr , logQR= True) #catchgenqr
-        Settings.globalVar = creator
-        Settings.wpIsConnected = False
+        settings.GLOBAL_VAR = creator
+        settings.WP_IS_CONNECTED = False
         global client
         try:
             client = creator.start()
@@ -60,7 +60,7 @@ class openWhatsapp():
         if creator.state == 'CONNECTED' and (creator.session == DocName):
             
             # request.session['wpStatus'] = True
-            Settings.wpIsConnected = True
+            settings.WP_IS_CONNECTED = True
         # return client
         time.sleep(5)
         try:
@@ -123,7 +123,6 @@ def whatsappApiDoc(doctorName, whatsappNumber, time_, date):
         pass
         # sessStart.close()
     
-
 def whatsappApiEdit(patientName, doctorName, whatsappNumber, time_, date, clinicName):
     # reclient= openWhatsapp.client
     from .views import catchgenqr
